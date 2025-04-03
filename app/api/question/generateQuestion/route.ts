@@ -12,19 +12,26 @@ export async function GET(request: Request) {
   const difficulty = url.searchParams.get("difficulty") || "HARD";
   const userLanguage = url.searchParams.get("userLanguage") || "Turkish";
   
-  const response = await createQuestionGraph.invoke({
-    UserLevel: userLevel,
-    Topic: topic,
-    TargetGrammerTopic: targetGrammerTopic,
-    Difficulty: difficulty,
-    UserLanguage:userLanguage
-  });
+  try {
+    const response = await createQuestionGraph.invoke({
+      UserLevel: userLevel,
+      Topic: topic,
+      TargetGrammerTopic: targetGrammerTopic,
+      Difficulty: difficulty,
+      UserLanguage:userLanguage
+    });
+    return Response.json(
+      { success: true, data: response.GeneratedQuestion, tips:response.Tips },
+      { status: 200 }
+    );
+  } catch (error) {
+    return Response.json(
+      { success: false, data: "",message:error },
+    );
+    
+  }
 
-  console.log("Generated",response.GeneratedQuestion);
   
   
-  return Response.json(
-    { success: true, data: response.GeneratedQuestion },
-    { status: 200 }
-  );
+ 
 }

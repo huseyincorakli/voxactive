@@ -27,9 +27,8 @@ export async function generateQuestion(formData:any) {
     cache: "no-store"
   });
   
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
-  
+ 
   return response.json();
 }
+
+

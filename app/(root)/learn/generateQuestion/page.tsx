@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,19 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
+import { toast } from "sonner";
+
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger
+} from "@/components/ui/drawer";
+import TipsDrawer from "@/components/TipsDrawer";
 
 export default function QuestionGenerator() {
     const [question, setQuestion] = useState(null);
@@ -37,21 +50,81 @@ export default function QuestionGenerator() {
     });
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [showText, setShowText] = useState<boolean>(false);
-
+    const [transcript, setTranscript] = useState<string | null>(null);
     const voiceRecorderRef = useRef<VoiceRecorderRef>(null);
+    const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
+    const [isTranscribing, setIsTranscribing] = useState(false);
+    const [isTranscribed, setIsTranscribed] = useState(false);
+    const [tips, setTips] = useState(null)
+    const textareaRef = useRef(null);
 
     const handleRecordingComplete = (blob: Blob) => {
         setAudioBlob(blob);
-        // İsterseniz burada ses kaydını API'ye gönderebilirsiniz
+        setIsTranscribed(false);
         console.log("Recording completed:", blob);
     };
 
-    const handleTranscript = async () => { }
 
+    const handleTranscript = async () => {
+        if (!audioBlob) return;
+
+        // Transkripsiyon başladığında state'i güncelleyelim
+        setIsTranscribing(true);
+
+        try {
+            // FormData oluştur
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.wav');
+
+            // API'ye gönder
+            const response = await fetch('/api/voice/stt', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Transcription failed');
+            }
+
+            if (result.succeded) {
+                setTranscript(result.transcript);
+                setShowText(true);
+                // Transkripsiyon başarılı olduğunu işaretleyelim
+                setIsTranscribed(true);
+            } else {
+                setTranscriptionError(result.message || 'Transcription failed');
+            }
+
+        } catch (error: any) {
+            console.error('Error transcribing audio:', error);
+            setTranscriptionError(error.message || 'Ses dönüştürme sırasında bir hata oluştu');
+        } finally {
+            // İşlem bittiğinde, transcribing state'ini false yapalım
+            setIsTranscribing(false);
+        }
+    };
+    const handleAnalyze = () => {
+        // Burada textarea'dan değeri alıp analiz işlemini yapabilirsiniz
+        if (textareaRef.current) {
+            const userAnswer = (textareaRef?.current as any).value;
+            console.log("Analyzing:", userAnswer);
+            // Analiz işleminizi buraya ekleyin
+            // ...
+        }
+    };
+
+    useEffect(() => {
+        if (textareaRef.current && transcript) {
+            (textareaRef.current as any).value = transcript;
+        }
+    }, [transcript]);
 
     // Process the HTML content to extract plain text and wrap words in badges
     useEffect(() => {
         if (question) {
+
             // Create a temporary div to parse the HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = question;
@@ -99,7 +172,13 @@ export default function QuestionGenerator() {
 
         try {
             const result = await generateQuestion(formDataObj);
+            if (!result.success) {
+                toast.error(result.message.error.message)
+                return;
+            }
             setQuestion(result.data);
+            setTips(result.tips)
+
         } catch (error) {
             console.error("Error generating question:", error);
         } finally {
@@ -280,27 +359,53 @@ export default function QuestionGenerator() {
                                         onRecordingComplete={handleRecordingComplete}
                                         ref={voiceRecorderRef} // Eğer bu ref'i oluşturduysan
                                     />
-                                    {audioBlob && ( // Ses kaydı yapıldıysa Transcript butonu göster
+                                    {audioBlob && (
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none"
-                                            onClick={handleTranscript} // Transcript işlemini başlatan fonksiyon
+                                            onClick={handleTranscript}
+                                            disabled={isTranscribing || isTranscribed}
                                         >
-                                            Transcript
+                                            {isTranscribing ? (
+                                                <>
+                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                    <span>Transcribing...</span>
+                                                </>
+                                            ) : isTranscribed ? (
+                                                "Transcribed"
+                                            ) : (
+                                                "Transcript"
+                                            )}
                                         </Button>
                                     )}
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
-                                        onClick={()=>{
+                                        onClick={() => {
                                             setShowText(!showText)
                                         }}
                                     >
                                         <Text className="h-3 w-3 mr-1" />
                                         <span className="text-xs">Reply with Text</span>
                                     </Button>
+                                    {
+                                        tips &&
+                                        <TipsDrawer
+                                            markdownContent={tips}
+                                            title="✨💡🌟 TIPS ✨💡🌟"
+                                            triggerButton={
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
+                                                >
+                                                    Show Tips
+                                                </Button>
+                                            }
+                                        />
+                                    }
                                 </div>
                             )}
                         </CardHeader>
@@ -321,8 +426,12 @@ export default function QuestionGenerator() {
                         {
                             showText && <CardFooter>
                                 <div className="grid w-full gap-4">
-                                    <Textarea  placeholder="Type your message here." />
-                                    <Button>Analyze it</Button>
+                                    <Textarea
+                                        placeholder="Type your message here."
+                                        defaultValue={transcript ? transcript : ""}
+                                        ref={textareaRef}
+                                    />
+                                    <Button onClick={handleAnalyze}>Analyze it</Button>
                                 </div>
                             </CardFooter>
                         }
