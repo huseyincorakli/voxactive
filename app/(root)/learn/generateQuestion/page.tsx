@@ -13,34 +13,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, RefreshCw, Text } from "lucide-react";
-import { generateQuestion } from "@/app/action";
-import { Badge } from "@/components/ui/badge";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Loader2, Text, RefreshCw } from "lucide-react";
+import { AnalyzeQuestion, analyzeQuestion, generateQuestion } from "@/app/action";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
 import { toast } from "sonner";
-
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger
-} from "@/components/ui/drawer";
 import TipsDrawer from "@/components/TipsDrawer";
+import { DisplayQuestion } from "@/components/DisplayQuestion";
+import ShowAnalyse from "@/components/ShowAnalyse";
 
 export default function QuestionGenerator() {
     const [question, setQuestion] = useState(null);
     const [processedQuestion, setProcessedQuestion] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [analysing, setAnalysing] = useState(false);
     const [formData, setFormData] = useState({
         userLevel: "C1",
         topic: "General",
@@ -57,6 +42,10 @@ export default function QuestionGenerator() {
     const [isTranscribed, setIsTranscribed] = useState(false);
     const [tips, setTips] = useState(null)
     const textareaRef = useRef(null);
+    const [previousQuestions, setPreviousQuestions] = useState<string[]>([]);
+    const [analysisResult, setAnalysisResult] = useState(null);
+    const [isAnalysisDrawerOpen, setIsAnalysisDrawerOpen] = useState(false);
+    const [lastAnalyzedKey, setLastAnalyzedKey] = useState<string | null>(null);
 
     const handleRecordingComplete = (blob: Blob) => {
         setAudioBlob(blob);
@@ -64,19 +53,28 @@ export default function QuestionGenerator() {
         console.log("Recording completed:", blob);
     };
 
+    const handleReset = () => {
+        setPreviousQuestions([]);
+        setQuestion(null);
+        setTips(null);
+        setAudioBlob(null);
+        setTranscript(null);
+        setShowText(false);
+        if (textareaRef.current) {
+            (textareaRef.current as any).value = "";
+        }
+        toast.success("History reset successfully");
+    };
 
     const handleTranscript = async () => {
         if (!audioBlob) return;
 
-        // Transkripsiyon başladığında state'i güncelleyelim
         setIsTranscribing(true);
 
         try {
-            // FormData oluştur
             const formData = new FormData();
             formData.append('audio', audioBlob, 'recording.wav');
 
-            // API'ye gönder
             const response = await fetch('/api/voice/stt', {
                 method: 'POST',
                 body: formData,
@@ -91,7 +89,6 @@ export default function QuestionGenerator() {
             if (result.succeded) {
                 setTranscript(result.transcript);
                 setShowText(true);
-                // Transkripsiyon başarılı olduğunu işaretleyelim
                 setIsTranscribed(true);
             } else {
                 setTranscriptionError(result.message || 'Transcription failed');
@@ -101,38 +98,106 @@ export default function QuestionGenerator() {
             console.error('Error transcribing audio:', error);
             setTranscriptionError(error.message || 'Ses dönüştürme sırasında bir hata oluştu');
         } finally {
-            // İşlem bittiğinde, transcribing state'ini false yapalım
             setIsTranscribing(false);
         }
     };
-    const handleAnalyze = () => {
-        // Burada textarea'dan değeri alıp analiz işlemini yapabilirsiniz
+
+
+    const handleAnalyze = async () => {
         if (textareaRef.current) {
             const userAnswer = (textareaRef?.current as any).value;
-            console.log("Analyzing:", userAnswer);
-            // Analiz işleminizi buraya ekleyin
-            // ...
+            if (!userAnswer) {
+                toast.error("Please enter your answer before analyzing.");
+                return;
+            }
+            if (!question) {
+                toast.error("Please generate a question before analyzing.");
+                return;
+            }
+
+            // Create a key to track this specific analysis
+            const analysisKey = `${question}:${userAnswer}`;
+
+            // Check if we already have this exact analysis
+            if (lastAnalyzedKey === analysisKey && analysisResult) {
+                // Just open the drawer if we already have this analysis
+                setIsAnalysisDrawerOpen(true);
+                return;
+            }
+
+            setAnalysing(true); // Show loading state
+
+            try {
+                const AnalyzeQuestionData: AnalyzeQuestion = {
+                    generatedQuestion: question ? question : "",
+                    userResponse: userAnswer,
+                    userLevel: formData.userLevel,
+                    userLanguage: formData.userLanguage
+                };
+
+                const response = await analyzeQuestion(AnalyzeQuestionData);
+                console.log("Analysis response:", response);
+
+                // Pass the response directly to the drawer component
+                if (response) {
+                    setAnalysisResult(response);
+                    setLastAnalyzedKey(analysisKey); // Store the key of what we analyzed
+                    setIsAnalysisDrawerOpen(true);
+                    toast.success("Analysis completed!");
+                } else {
+                    toast.error("Failed to analyze response");
+                }
+
+            } catch (error) {
+                console.error("Error analyzing answer:", error);
+                toast.error("Error analyzing your answer. Please try again.");
+            } finally {
+                setAnalysing(false);
+            }
         }
     };
-
     useEffect(() => {
-        if (textareaRef.current && transcript) {
-            (textareaRef.current as any).value = transcript;
-        }
-    }, [transcript]);
+        // Clear previous analysis when question changes
+        setAnalysisResult(null);
+        setLastAnalyzedKey(null);
+    }, [question]);
 
-    // Process the HTML content to extract plain text and wrap words in badges
+    // Reset analysis when form data changes
+    useEffect(() => {
+        // Clear previous analysis when any form parameter changes
+        setAnalysisResult(null);
+        setLastAnalyzedKey(null);
+    }, [formData]);
+
+    // Also update the textareaRef change effect to reset analysis
+    useEffect(() => {
+        if (textareaRef.current) {
+            const textareaElement = textareaRef.current as HTMLTextAreaElement;
+
+            // Create a function to handle textarea changes
+            const handleTextareaChange = () => {
+                // If the content changes, we need to reset the analysis
+                setLastAnalyzedKey(null);
+            };
+
+            // Add event listener
+            textareaElement.addEventListener('input', handleTextareaChange);
+
+            // Cleanup
+            return () => {
+                textareaElement.removeEventListener('input', handleTextareaChange);
+            };
+        }
+    }, [textareaRef.current]);
+
     useEffect(() => {
         if (question) {
 
-            // Create a temporary div to parse the HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = question;
 
-            // Extract the text content
             const textContent = tempDiv.textContent || tempDiv.innerText;
 
-            // Split text into words
             const words = textContent.match(/\S+/g) || [];
 
             // Create badges for each word
@@ -161,101 +226,102 @@ export default function QuestionGenerator() {
         }
     }, [question]);
 
-    async function handleSubmit(event: any) {
+    async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
         setIsLoading(true);
 
         const formDataObj = new FormData();
+
         Object.entries(formData).forEach(([key, value]) => {
             formDataObj.append(key, value);
         });
 
+        if (question) {
+            formDataObj.append("previousQuestion", question);
+        }
+
+        formDataObj.append("previousQuestions", JSON.stringify(previousQuestions));
+
         try {
             const result = await generateQuestion(formDataObj);
             if (!result.success) {
-                toast.error(result.message.error.message)
+                toast.error(result.message?.error?.message || "An error occurred");
                 return;
             }
+
+            // Set the new question
             setQuestion(result.data);
-            setTips(result.tips)
+            setTips(result.tips);
+
+            // Update previous questions array
+            if (result.data) {
+                setPreviousQuestions(prev => [...prev, result.data]);
+            }
 
         } catch (error) {
             console.error("Error generating question:", error);
+            toast.error("Failed to generate question");
         } finally {
             setIsLoading(false);
         }
     }
 
     const handleChange = (name: any, value: any) => {
+        setPreviousQuestions([]);
+        setQuestion(null);
+        setTips(null);
+        setTranscript(null);
+        setShowText(false);
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
-
-    const regenerateQuestion = () => {
-        handleSubmit({ preventDefault: () => { } });
-    };
-
-    // Function to wrap each word in a badge with tooltip
-    const WordBadge = ({ word, index }: { word: any, index: any }) => {
-        return (
-            <TooltipProvider key={index}>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Badge
-                            variant="outline"
-                            className="text-[13px] m-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-black border-gray-300"
-                        >
-                            {word}
-                        </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-blue-950">
-                        <p className="text-white">Part of speech: Noun</p>
-                        <p className="text-white">Definition: {word}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        );
-    };
-
-    // Function to process HTML and extract words
-    const DisplayQuestion = ({ htmlContent }: { htmlContent: any }) => {
-        if (!htmlContent) return null;
-
-        // Create a temporary div to parse the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlContent;
-
-        // Extract the text content
-        const textContent = tempDiv.textContent || tempDiv.innerText;
-
-        // Split text into words by spaces while preserving punctuation
-        const words = textContent.split(/\s+/).filter(word => word.length > 0);
-
-        return (
-            <div className="flex flex-wrap">
-                {words.map((word, index) => (
-                    <WordBadge key={index} word={word} index={index} />
-                ))}
-            </div>
-        );
-    };
-
-
-
+    useEffect(() => {
+        if (previousQuestions.join().length > 1000) {
+            toast.warning(
+                "Question history is getting long. This might affect the system's performance and memory usage. Consider resetting the history.",
+                {
+                    duration: 6000,
+                    action: {
+                        label: "Reset Now",
+                        onClick: handleReset
+                    }
+                }
+            );
+        }
+    }, [previousQuestions]);
     return (
-        <div className=" text-white">
+        <div className="text-white">
+            <ShowAnalyse
+                isOpen={isAnalysisDrawerOpen}
+                onClose={() => setIsAnalysisDrawerOpen(false)}
+                analysisResult={analysisResult}
+            />
             <div className="container mx-auto py-10 px-4">
                 <Card className="text-3xl font-bold mb-10 text-center">
                     <p className="text-2xl p-4">This tool generates a question for you to translate into English.</p>
                 </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left side - Form */}
+                    {/* Form Side */}
                     <Card className="bg-zinc-900 border-zinc-800 text-white h-fit">
-                        <CardHeader>
-                            <CardTitle className="text-xl">Set Question Parameters</CardTitle>
-                            <p className="text-sm text-zinc-400 mt-1">
-                                Fill in the fields below to generate a question suitable for your level and needs
-                            </p>
+                        <CardHeader className="flex flex-row items-start justify-between">
+                            <div>
+                                <CardTitle className="text-xl">Set Question Parameters</CardTitle>
+                                <p className="text-sm text-zinc-400 mt-1">
+                                    Fill in the fields below to generate a question suitable for your level and needs
+                                </p>
+                            </div>
+                            {previousQuestions.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white"
+                                    onClick={handleReset}
+                                    title="Reset question history"
+                                >
+                                    <RefreshCw className="h-4 w-4 mr-1" />
+                                    Reset History
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-6">
@@ -329,7 +395,7 @@ export default function QuestionGenerator() {
                                     </div>
                                 </div>
 
-                                <div className="pt-4">
+                                <div className="pt-4 flex space-x-2">
                                     <Button
                                         type="submit"
                                         className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
@@ -348,16 +414,14 @@ export default function QuestionGenerator() {
                             </form>
                         </CardContent>
                     </Card>
-
-                    {/* Right side - Generated Question */}
+                    {/* Question Display Side */}
                     <Card className="bg-zinc-900 border-zinc-800 text-white">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-xl">Generated Question</CardTitle>
+                        <CardHeader className="pb-2">
                             {question && (
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <VoiceRecorder
                                         onRecordingComplete={handleRecordingComplete}
-                                        ref={voiceRecorderRef} // Eğer bu ref'i oluşturduysan
+                                        ref={voiceRecorderRef}
                                     />
                                     {audioBlob && (
                                         <Button
@@ -412,9 +476,7 @@ export default function QuestionGenerator() {
                         <CardContent>
                             {question ? (
                                 <div className="bg-white rounded-md p-2 text-black min-h-[100px] max-h-[600px] overflow-y-auto">
-                                    <TooltipProvider>
-                                        <DisplayQuestion htmlContent={question} />
-                                    </TooltipProvider>
+                                    <DisplayQuestion htmlContent={question} />
                                 </div>
                             ) : (
                                 <div className="bg-zinc-800 rounded-md p-2 text-zinc-400 min-h-[400px] flex items-center justify-center">
@@ -423,18 +485,33 @@ export default function QuestionGenerator() {
                             )}
                         </CardContent>
 
-                        {
-                            showText && <CardFooter>
+                        {showText && (
+                            <CardFooter>
                                 <div className="grid w-full gap-4">
                                     <Textarea
-                                        placeholder="Type your message here."
+                                        placeholder="Type your answer here."
                                         defaultValue={transcript ? transcript : ""}
                                         ref={textareaRef}
                                     />
-                                    <Button onClick={handleAnalyze}>Analyze it</Button>
+                                    <Button
+                                        onClick={handleAnalyze}
+                                        disabled={analysing}
+                                        className={lastAnalyzedKey ? "bg-green-600 hover:bg-green-700" : ""}
+                                    >
+                                        {analysing ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                Analyzing...
+                                            </>
+                                        ) : lastAnalyzedKey && analysisResult ? (
+                                            "Show Analysis Results"
+                                        ) : (
+                                            "Analyze it"
+                                        )}
+                                    </Button>
                                 </div>
                             </CardFooter>
-                        }
+                        )}
                     </Card>
                 </div>
             </div>

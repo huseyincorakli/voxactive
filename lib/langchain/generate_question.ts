@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts"
 import { Annotation, StateGraph } from "@langchain/langgraph"
-import { defaultLLM } from "./llm"
+import { createLLM } from "./llm"
 
 
 const QuestionGeneratorState = Annotation.Root({
@@ -10,7 +10,8 @@ const QuestionGeneratorState = Annotation.Root({
   TargetGrammerTopic: Annotation<string>,
   Difficulty: Annotation<string>,
   GeneratedQuestion: Annotation<string>,
-  Tips: Annotation<string>
+  Tips: Annotation<string>,
+  PreviousQuestions: Annotation<string[]>
 })
 
 const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
@@ -28,7 +29,7 @@ const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   - Expert: 3-4 sentences with complex structure, connecting ideas and providing detailed context.
 
   IMPORTANT: Generate ONLY ONE QUESTION. Do not use multiple question marks or create multiple questions.
-  
+  IMPORTANT: Always try to create different questions each time. Previous question to the user is: {PreviousQuestions}
   Response format: Return ONLY the question with no additional text.
 `)
 
@@ -55,21 +56,37 @@ const TranslationTipsPrompt = ChatPromptTemplate.fromTemplate(`
   11. Help them recognize idiomatic expressions
   12. Just give tips, don't add anything else
 `)
-const questionGeneratorChain = QuestionGeneratorPrompt.pipe(defaultLLM)
-const translationTipsChain = TranslationTipsPrompt.pipe(defaultLLM)
+const llm =  createLLM("google/gemini-2.0-flash-lite-001",
+  "https://openrouter.ai/api/v1",
+  1.5)
+const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm)
+const translationTipsChain = TranslationTipsPrompt.pipe(llm)
 
 async function generateQuestion(state: typeof QuestionGeneratorState.State) {
+  // Initialize state variables if they don't exist
+  const previousQuestions = state.PreviousQuestions || [];
+  
+  // Format previous questions as a formatted list for the prompt
+  const formattedPreviousQuestions = previousQuestions.map((q, i) => `${i+1}. "${q}"`).join("\n");
+  
   const msg = await questionGeneratorChain.invoke({
     Difficulty: state.Difficulty,
     TargetGrammerTopic: state.TargetGrammerTopic,
     Topic: state.Topic,
     UserLanguage: state.UserLanguage,
-    UserLevel: state.UserLevel
-  })
+    UserLevel: state.UserLevel,
+    PreviousQuestions: formattedPreviousQuestions,
+  });
 
-  return { GeneratedQuestion: msg.content }
+  const newQuestion = msg.content as string;
+  
+ 
+  
+  return { 
+    GeneratedQuestion: newQuestion,
+    PreviousQuestions: [...previousQuestions, newQuestion],
+  };
 }
-
 async function generateTranslationTips(state: typeof QuestionGeneratorState.State) {
   const msg = await translationTipsChain.invoke({
     GeneratedQuestion: state.GeneratedQuestion,
