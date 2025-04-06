@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import AudioPlayer from './Audio';
 
 interface FeedbackData {
     GrammerFeedback?: string;
@@ -135,14 +136,12 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
         return sections;
     };
 
-    // Choose which data structure to use
     const contentSections = analysisResult?.data?.FeedBack
         ? getFeedbackSections()
         : analysisResult?.Content
             ? parseContentString(analysisResult.Content)
             : [];
 
-    // Calculate a simple score based on positive language in feedback
 
 
     return (
@@ -176,10 +175,13 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
                                 <div className="text-zinc-200 font-medium">
                                     {section.content}
                                 </div>
-
+                                {section.title === "Corrected Translation" && (
+                                    <AudioPlayer text={section.content} />
+                                )}
                             </div>
                         ) : null
                     ))}
+
 
                     {!hasValidData() && (
                         <div className="py-12 text-center text-zinc-400 flex flex-col items-center">

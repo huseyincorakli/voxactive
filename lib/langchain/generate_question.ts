@@ -30,6 +30,7 @@ const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
 
   IMPORTANT: Generate ONLY ONE QUESTION. Do not use multiple question marks or create multiple questions.
   IMPORTANT: Always try to create different questions each time. Previous question to the user is: {PreviousQuestions}
+  !IMPORTANT : You should make sure that the created question follows the rules of grammar in the {UserLanguage} language.
   Response format: Return ONLY the question with no additional text.
 `)
 
@@ -63,10 +64,8 @@ const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm)
 const translationTipsChain = TranslationTipsPrompt.pipe(llm)
 
 async function generateQuestion(state: typeof QuestionGeneratorState.State) {
-  // Initialize state variables if they don't exist
   const previousQuestions = state.PreviousQuestions || [];
   
-  // Format previous questions as a formatted list for the prompt
   const formattedPreviousQuestions = previousQuestions.map((q, i) => `${i+1}. "${q}"`).join("\n");
   
   const msg = await questionGeneratorChain.invoke({

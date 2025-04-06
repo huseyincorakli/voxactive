@@ -1,18 +1,8 @@
 "use client";
-
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Loader2, Text, RefreshCw } from "lucide-react";
 import { AnalyzeQuestion, analyzeQuestion, generateQuestion } from "@/app/action";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
@@ -20,6 +10,7 @@ import { toast } from "sonner";
 import TipsDrawer from "@/components/TipsDrawer";
 import { DisplayQuestion } from "@/components/DisplayQuestion";
 import ShowAnalyse from "@/components/ShowAnalyse";
+import QuestionForm from "@/components/QuestionForm";
 
 export default function QuestionGenerator() {
     const [question, setQuestion] = useState(null);
@@ -29,7 +20,7 @@ export default function QuestionGenerator() {
     const [formData, setFormData] = useState({
         userLevel: "C1",
         topic: "General",
-        targetGrammerTopic: "Simple Present Tense",
+        targetGrammarTopic: "Simple Present Tense",
         difficulty: "EXPERT",
         userLanguage: "Turkish",
     });
@@ -115,17 +106,14 @@ export default function QuestionGenerator() {
                 return;
             }
 
-            // Create a key to track this specific analysis
             const analysisKey = `${question}:${userAnswer}`;
 
-            // Check if we already have this exact analysis
             if (lastAnalyzedKey === analysisKey && analysisResult) {
-                // Just open the drawer if we already have this analysis
                 setIsAnalysisDrawerOpen(true);
                 return;
             }
 
-            setAnalysing(true); // Show loading state
+            setAnalysing(true);
 
             try {
                 const AnalyzeQuestionData: AnalyzeQuestion = {
@@ -138,10 +126,9 @@ export default function QuestionGenerator() {
                 const response = await analyzeQuestion(AnalyzeQuestionData);
                 console.log("Analysis response:", response);
 
-                // Pass the response directly to the drawer component
                 if (response) {
                     setAnalysisResult(response);
-                    setLastAnalyzedKey(analysisKey); // Store the key of what we analyzed
+                    setLastAnalyzedKey(analysisKey); 
                     setIsAnalysisDrawerOpen(true);
                     toast.success("Analysis completed!");
                 } else {
@@ -157,19 +144,15 @@ export default function QuestionGenerator() {
         }
     };
     useEffect(() => {
-        // Clear previous analysis when question changes
         setAnalysisResult(null);
         setLastAnalyzedKey(null);
     }, [question]);
 
-    // Reset analysis when form data changes
     useEffect(() => {
-        // Clear previous analysis when any form parameter changes
         setAnalysisResult(null);
         setLastAnalyzedKey(null);
     }, [formData]);
 
-    // Also update the textareaRef change effect to reset analysis
     useEffect(() => {
         if (textareaRef.current) {
             const textareaElement = textareaRef.current as HTMLTextAreaElement;
@@ -200,7 +183,6 @@ export default function QuestionGenerator() {
 
             const words = textContent.match(/\S+/g) || [];
 
-            // Create badges for each word
             const wordBadges = words.map((word, index) => {
                 return (
                     `<TooltipProvider key="${index}">
@@ -249,11 +231,9 @@ export default function QuestionGenerator() {
                 return;
             }
 
-            // Set the new question
             setQuestion(result.data);
             setTips(result.tips);
 
-            // Update previous questions array
             if (result.data) {
                 setPreviousQuestions(prev => [...prev, result.data]);
             }
@@ -297,7 +277,7 @@ export default function QuestionGenerator() {
             />
             <div className="container mx-auto py-10 px-4">
                 <Card className="text-3xl font-bold mb-10 text-center">
-                    <p className="text-2xl p-4">This tool generates a question for you to translate into English.</p>
+                    <p className="text-2xl p-4">TITLE</p>
                 </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -324,94 +304,12 @@ export default function QuestionGenerator() {
                             )}
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="userLevel" className="text-zinc-400">English Level</Label>
-                                        <Select
-                                            value={formData.userLevel}
-                                            onValueChange={(value) => handleChange("userLevel", value)}
-                                        >
-                                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                                                <SelectValue placeholder="Select level" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                                                <SelectItem value="A1">A1</SelectItem>
-                                                <SelectItem value="A2">A2</SelectItem>
-                                                <SelectItem value="B1">B1</SelectItem>
-                                                <SelectItem value="B2">B2</SelectItem>
-                                                <SelectItem value="C1">C1 - Advanced</SelectItem>
-                                                <SelectItem value="C2">C2</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="topic" className="text-zinc-400">Topic / Subject</Label>
-                                        <Input
-                                            id="topic"
-                                            value={formData.topic}
-                                            onChange={(e) => handleChange("topic", e.target.value)}
-                                            className="bg-zinc-800 border-zinc-700 text-white"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="targetGrammerTopic" className="text-zinc-400">Target Grammar Topic</Label>
-                                        <Input
-                                            id="targetGrammerTopic"
-                                            value={formData.targetGrammerTopic}
-                                            onChange={(e) => handleChange("targetGrammerTopic", e.target.value)}
-                                            className="bg-zinc-800 border-zinc-700 text-white"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="difficulty" className="text-zinc-400">Difficulty Level</Label>
-                                        <Select
-                                            value={formData.difficulty}
-                                            onValueChange={(value) => handleChange("difficulty", value)}
-                                        >
-                                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                                                <SelectValue placeholder="Select difficulty" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                                                <SelectItem value="EASY">Easy</SelectItem>
-                                                <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                <SelectItem value="HARD">Hard</SelectItem>
-                                                <SelectItem value="EXPERT">Expert</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="userLanguage" className="text-zinc-400">Native Language</Label>
-                                        <Input
-                                            id="userLanguage"
-                                            value={formData.userLanguage}
-                                            onChange={(e) => handleChange("userLanguage", e.target.value)}
-                                            className="bg-zinc-800 border-zinc-700 text-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex space-x-2">
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            "Generate Question"
-                                        )}
-                                    </Button>
-                                </div>
-                            </form>
+                            <QuestionForm
+                                formData={formData}
+                                handleChange={handleChange}
+                                handleSubmit={handleSubmit}
+                                isLoading={isLoading}
+                            />
                         </CardContent>
                     </Card>
                     {/* Question Display Side */}

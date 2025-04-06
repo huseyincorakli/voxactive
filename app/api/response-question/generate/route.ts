@@ -1,4 +1,4 @@
-import { createQuestionGraph } from "@/lib/langchain/generate_question";
+import { createResponseQuestionGraph } from "@/lib/langchain/create_response_question";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -15,17 +15,17 @@ export async function GET(request: Request) {
     [];                 
   
   try {
-    const response = await createQuestionGraph.invoke({
+    const response = await createResponseQuestionGraph.invoke({
       UserLevel: userLevel,
       Topic: topic,
-      TargetGrammerTopic: targetGrammerTopic,
+      TargetGrammarTopic: targetGrammerTopic,
       Difficulty: difficulty,
       UserLanguage: userLanguage,
       PreviousQuestions: previousQuestionsArray  
     });
     
     return Response.json(
-      { success: true, data: response.GeneratedQuestion, tips: response.Tips },
+      { success: true, data: response.GeneratedQuestion, tips: response.AnswerTips },
       { status: 200 }
     );
   } catch (error) {

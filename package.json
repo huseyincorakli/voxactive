@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "elevenlabs": "^1.55.0",
     "@deepgram/sdk": "^3.11.3",
     "@langchain/community": "^0.3.33",
     "@langchain/core": "^0.3.42",
