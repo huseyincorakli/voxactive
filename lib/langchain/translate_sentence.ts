@@ -19,16 +19,19 @@ For each word in the original sentence, provide possible English translations.
 IMPORTANT The response must be in the following format:
 {format}
 
+IMPORTANT If the sentence is already in English, translate it into the {userlang} in the same way 
+
 Here is the sentence to translate: {sentence}
   `]
 ]);
 
 const chain = prompt.pipe(llm).pipe(parser);
 
-const translateSentence = async (sentence: string) => {
+const translateSentence = async (sentence: string,userlang:string) => {
   try {
     const response = await chain.invoke({ 
-      sentence, 
+      sentence,
+      userlang, 
       format: formatInstructions 
     });
     
@@ -45,5 +48,7 @@ const translateSentence = async (sentence: string) => {
     };
   }
 };
+
+
 
 export { translateSentence };

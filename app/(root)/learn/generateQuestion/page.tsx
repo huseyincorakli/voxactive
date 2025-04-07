@@ -4,19 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Text, RefreshCw } from "lucide-react";
-import { AnalyzeQuestion, analyzeQuestion, generateQuestion } from "@/app/action";
+import { AnalyzeQuestion, analyzeQuestion, generateQuestion, generateResponseQuestion } from "@/app/action";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
 import { toast } from "sonner";
 import TipsDrawer from "@/components/TipsDrawer";
 import { DisplayQuestion } from "@/components/DisplayQuestion";
 import ShowAnalyse from "@/components/ShowAnalyse";
 import QuestionForm from "@/components/QuestionForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Define question type options
+export type QuestionType = "translation" | "response";
 
 export default function QuestionGenerator() {
     const [question, setQuestion] = useState(null);
     const [processedQuestion, setProcessedQuestion] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [analysing, setAnalysing] = useState(false);
+    const [questionType, setQuestionType] = useState<QuestionType>("translation");
     const [formData, setFormData] = useState({
         userLevel: "C1",
         topic: "General",
@@ -143,6 +148,7 @@ export default function QuestionGenerator() {
             }
         }
     };
+    
     useEffect(() => {
         setAnalysisResult(null);
         setLastAnalyzedKey(null);
@@ -225,7 +231,15 @@ export default function QuestionGenerator() {
         formDataObj.append("previousQuestions", JSON.stringify(previousQuestions));
 
         try {
-            const result = await generateQuestion(formDataObj);
+            let result;
+            
+            // Determine which API to call based on question type
+            if (questionType === "translation") {
+                result = await generateQuestion(formDataObj);
+            } else {
+                result = await generateResponseQuestion(formDataObj);
+            }
+
             if (!result.success) {
                 toast.error(result.message?.error?.message || "An error occurred");
                 return;
@@ -254,6 +268,14 @@ export default function QuestionGenerator() {
         setShowText(false);
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
+    
+    const handleQuestionTypeChange = (value: QuestionType) => {
+        setQuestionType(value);
+        setPreviousQuestions([]);
+        setQuestion(null);
+        setTips(null);
+    };
+    
     useEffect(() => {
         if (previousQuestions.join().length > 1000) {
             toast.warning(
@@ -268,6 +290,7 @@ export default function QuestionGenerator() {
             );
         }
     }, [previousQuestions]);
+    
     return (
         <div className="text-white">
             <ShowAnalyse
@@ -290,20 +313,45 @@ export default function QuestionGenerator() {
                                     Fill in the fields below to generate a question suitable for your level and needs
                                 </p>
                             </div>
-                            {previousQuestions.length > 0 && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white"
-                                    onClick={handleReset}
-                                    title="Reset question history"
-                                >
-                                    <RefreshCw className="h-4 w-4 mr-1" />
-                                    Reset History
-                                </Button>
-                            )}
+                            <div className="flex space-x-2">
+                                {previousQuestions.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white"
+                                        onClick={handleReset}
+                                        title="Reset question history"
+                                    >
+                                        <RefreshCw className="h-4 w-4 mr-1" />
+                                        Reset History
+                                    </Button>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                    Question Type
+                                </label>
+                                <Select 
+                                    value={questionType} 
+                                    onValueChange={(value) => handleQuestionTypeChange(value as QuestionType)}
+                                >
+                                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                        <SelectValue placeholder="Select question type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                                        <SelectItem value="translation">Translation Question</SelectItem>
+                                        <SelectItem value="response">Response Question</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    {questionType === "translation" 
+                                        ? "Generate questions for translation practice" 
+                                        : "Generate questions for answering practice"}
+                                </p>
+                            </div>
+                            
                             <QuestionForm
                                 formData={formData}
                                 handleChange={handleChange}
@@ -356,7 +404,7 @@ export default function QuestionGenerator() {
                                         tips &&
                                         <TipsDrawer
                                             markdownContent={tips}
-                                            title="✨💡🌟 TIPS ✨💡🌟"
+                                            title={questionType === "translation" ? "✨💡🌟 TRANSLATION TIPS ✨💡🌟" : "✨💡🌟 ANSWER TIPS ✨💡🌟"}
                                             triggerButton={
                                                 <Button
                                                     variant="outline"
@@ -374,11 +422,19 @@ export default function QuestionGenerator() {
                         <CardContent>
                             {question ? (
                                 <div className="bg-white rounded-md p-2 text-black min-h-[100px] max-h-[600px] overflow-y-auto">
-                                    <DisplayQuestion htmlContent={question} />
+                                    <DisplayQuestion 
+                                        htmlContent={question} 
+                                        questionType={questionType}
+                                        userlang={formData.userLanguage}
+                                    />
                                 </div>
                             ) : (
                                 <div className="bg-zinc-800 rounded-md p-2 text-zinc-400 min-h-[400px] flex items-center justify-center">
-                                    <p className="text-center">Your generated question will appear here</p>
+                                    <p className="text-center">
+                                        {questionType === "translation" 
+                                            ? "Your translation question will appear here" 
+                                            : "Your question to answer will appear here"}
+                                    </p>
                                 </div>
                             )}
                         </CardContent>
@@ -387,7 +443,9 @@ export default function QuestionGenerator() {
                             <CardFooter>
                                 <div className="grid w-full gap-4">
                                     <Textarea
-                                        placeholder="Type your answer here."
+                                        placeholder={questionType === "translation" 
+                                            ? "Type your translation here." 
+                                            : "Type your answer here."}
                                         defaultValue={transcript ? transcript : ""}
                                         ref={textareaRef}
                                     />

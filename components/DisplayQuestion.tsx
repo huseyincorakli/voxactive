@@ -2,7 +2,7 @@ import { TooltipProvider } from "./ui/tooltip";
 import { WordBadge } from "./WordBadge";
 import { useState, useEffect } from "react";
 
-export const DisplayQuestion = ({ htmlContent }: { htmlContent: any }) => {
+export const DisplayQuestion = ({ htmlContent,questionType,userlang }: { htmlContent: any,questionType:string,userlang:string }) => {
     const [translatedWords, setTranslatedWords] = useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = useState(false);
 
@@ -33,7 +33,7 @@ export const DisplayQuestion = ({ htmlContent }: { htmlContent: any }) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ word: textContent }),
+                    body: JSON.stringify({ word: textContent,userlang:userlang}),
                 });
                 
                 const data = await response.json();

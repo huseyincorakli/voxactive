@@ -6,13 +6,13 @@ import { Button } from './ui/button';
 import { Loader2 } from 'lucide-react';
 import { GRAMMAR_TOPICS_BY_LEVEL, Languages } from '@/lib/constants';
 import { LevelType } from '@/types/init';
-
+import { Separator } from './ui/separator';
 
 interface FormDataType {
     userLevel: string;
     topic: string;
     targetGrammarTopic: string;
-    targetGrammerTopic?: string;
+    targetGrammerTopic?: string; // For backwards compatibility
     difficulty: string;
     userLanguage: string;
 }
@@ -28,7 +28,7 @@ interface QuestionFormProps {
     isLoading: boolean;
 }
 
-const DynamicGrammarForm = ({ handleSubmit, formData, handleChange, isLoading }: QuestionFormProps) => {
+const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: QuestionFormProps) => {
     const [availableGrammarTopics, setAvailableGrammarTopics] = useState<string[]>([]);
 
     useEffect(() => {
@@ -48,119 +48,153 @@ const DynamicGrammarForm = ({ handleSubmit, formData, handleChange, isLoading }:
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="userLevel" className="text-zinc-400">English Level</Label>
-                    <Select
-                        value={formData.userLevel}
-                        onValueChange={(value) => handleChange("userLevel", value)}
-                    >
-                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                            <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                            <SelectItem value="A1">A1</SelectItem>
-                            <SelectItem value="A2">A2</SelectItem>
-                            <SelectItem value="B1">B1</SelectItem>
-                            <SelectItem value="B1+">B1+</SelectItem>
-                            <SelectItem value="B2">B2</SelectItem>
-                            <SelectItem value="C1">C1 - Advanced</SelectItem>
-                            <SelectItem value="C2">C2</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="topic" className="text-zinc-400">Topic / Subject</Label>
-                    <Input
-                        id="topic"
-                        value={formData.topic}
-                        onChange={(e) => handleChange("topic", e.target.value)}
-                        className="bg-zinc-800 border-zinc-700 text-white"
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="targetGrammarTopic" className="text-zinc-400">Target Grammar Topic</Label>
-                    {availableGrammarTopics.length > 0 ? (
+            {/* Main form section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left column */}
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="userLevel" className="text-zinc-300 font-medium">
+                            English Level
+                        </Label>
                         <Select
-                            value={formData.targetGrammarTopic || formData.targetGrammerTopic || ""}
-                            onValueChange={(value) => handleChange("targetGrammarTopic", value)}
+                            value={formData.userLevel}
+                            onValueChange={(value) => handleChange("userLevel", value)}
                         >
                             <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                                <SelectValue placeholder="Select grammar topic" />
+                                <SelectValue placeholder="Select level" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white max-h-80">
-                                {availableGrammarTopics.map((topic) => (
-                                    <SelectItem key={topic} value={topic}>
-                                        {topic}
+                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                                <SelectItem value="A1">A1 - Beginner</SelectItem>
+                                <SelectItem value="A2">A2 - Elementary</SelectItem>
+                                <SelectItem value="B1">B1 - Intermediate</SelectItem>
+                                <SelectItem value="B1+">B1+ - Upper Intermediate</SelectItem>
+                                <SelectItem value="B2">B2 - Upper Intermediate</SelectItem>
+                                <SelectItem value="C1">C1 - Advanced</SelectItem>
+                                <SelectItem value="C2">C2 - Proficient</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-zinc-500 mt-1">
+                            Select your current English proficiency level
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="difficulty" className="text-zinc-300 font-medium">
+                            Difficulty
+                        </Label>
+                        <Select
+                            value={formData.difficulty}
+                            onValueChange={(value) => handleChange("difficulty", value)}
+                        >
+                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                <SelectValue placeholder="Select difficulty" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                                <SelectItem value="EASY">Easy</SelectItem>
+                                <SelectItem value="MEDIUM">Medium</SelectItem>
+                                <SelectItem value="HARD">Hard</SelectItem>
+                                <SelectItem value="EXPERT">Expert</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-zinc-500 mt-1">
+                            Choose how challenging the question should be
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="userLanguage" className="text-zinc-300 font-medium">
+                            Your Language
+                        </Label>
+                        <Select
+                            value={formData.userLanguage}
+                            onValueChange={(value) => handleChange("userLanguage", value)}
+                        >
+                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                <SelectValue placeholder="Select native language" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700 text-white max-h-60">
+                                {Languages.map((language) => (
+                                    <SelectItem key={language} value={language}>
+                                        {language}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                    ) : (
+                        <p className="text-xs text-zinc-500 mt-1">
+                            Tips will be provided in this language
+                        </p>
+                    </div>
+                </div>
+
+                {/* Right column */}
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="topic" className="text-zinc-300 font-medium">
+                            Topic / Subject
+                        </Label>
                         <Input
-                            id="targetGrammarTopic"
-                            value={formData.targetGrammarTopic || formData.targetGrammerTopic || ""}
-                            onChange={(e) => handleChange("targetGrammarTopic", e.target.value)}
-                            placeholder="Please select an English level first"
-                            className="bg-zinc-800 border-zinc-700 text-white"
-                            disabled={!formData.userLevel}
+                            id="topic"
+                            value={formData.topic}
+                            onChange={(e) => handleChange("topic", e.target.value)}
+                            className="bg-zinc-800 border-zinc-700 text-white max-w-xs"
+                            placeholder="e.g. Travel, Family, Work, etc."
                         />
-                    )}
-                </div>
+                        <p className="text-xs text-zinc-500 mt-1">
+                            What would you like the question to be about?
+                        </p>
+                    </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="difficulty" className="text-zinc-400">Difficulty Level</Label>
-                    <Select
-                        value={formData.difficulty}
-                        onValueChange={(value) => handleChange("difficulty", value)}
-                    >
-                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                            <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                            <SelectItem value="EASY">Easy</SelectItem>
-                            <SelectItem value="MEDIUM">Medium</SelectItem>
-                            <SelectItem value="HARD">Hard</SelectItem>
-                            <SelectItem value="EXPERT">Expert</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="userLanguage" className="text-zinc-400">Native Language</Label>
-                    <Select
-                        value={formData.userLanguage}
-                        onValueChange={(value) => handleChange("userLanguage", value)}
-                    >
-                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                            <SelectValue placeholder="Select your native language" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-zinc-800 border-zinc-700 text-white max-h-80">
-                            {Languages.map((language) => (
-                                <SelectItem key={language} value={language}>
-                                    {language}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                        <Label htmlFor="targetGrammarTopic" className="text-zinc-300 font-medium">
+                            Grammar Focus
+                        </Label>
+                        {availableGrammarTopics.length > 0 ? (
+                            <Select
+                                value={formData.targetGrammarTopic || formData.targetGrammerTopic || ""}
+                                onValueChange={(value) => handleChange("targetGrammarTopic", value)}
+                            >
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white max-w-xs">
+                                    <SelectValue placeholder="Select grammar topic" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700 text-white max-h-60 ">
+                                    {availableGrammarTopics.map((topic) => (
+                                        <SelectItem key={topic} value={topic}>
+                                            {topic}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <Input
+                                id="targetGrammarTopic"
+                                value={formData.targetGrammarTopic || formData.targetGrammerTopic || ""}
+                                onChange={(e) => handleChange("targetGrammarTopic", e.target.value)}
+                                placeholder="Please select an English level first"
+                                className="bg-zinc-800 border-zinc-700 text-white "
+                                disabled={!formData.userLevel}
+                            />
+                        )}
+                        <p className="text-xs text-zinc-500 mt-1">
+                            The specific grammar structure to practice
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div className="pt-4 flex space-x-2">
+            {/* Generate button */}
+            <div className="pt-4">
+                <Separator className="mb-6 bg-zinc-700" />
                 <Button
                     type="submit"
-                    className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
                     disabled={isLoading || !formData.userLevel || !(formData.targetGrammarTopic || formData.targetGrammerTopic)}
                 >
                     {isLoading ? (
                         <>
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Generating...
+                            Generating Question...
                         </>
                     ) : (
-                        "Generate Question"
+                        "Generate New Question"
                     )}
                 </Button>
             </div>
@@ -168,4 +202,4 @@ const DynamicGrammarForm = ({ handleSubmit, formData, handleChange, isLoading }:
     );
 };
 
-export default DynamicGrammarForm;
+export default QuestionForm;
