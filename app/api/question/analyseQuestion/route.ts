@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const userResponse = url.searchParams.get("userResponse") || ""
     const userLevel = url.searchParams.get("userLevel") || ""
     const userLanguage = url.searchParams.get("userLanguage") || "" 
+    const targetGrammarTopic = url.searchParams.get("targetGrammarTopic") || ""
 
 
 
@@ -15,10 +16,12 @@ export async function GET(request: Request) {
             GeneratedQuestion: generatedQuestion,
             UserLevel: userLevel,
             UserResponse: userResponse,
-            UserLanguage: userLanguage  
+            UserLanguage: userLanguage,
+            TargetGrammarTopic: targetGrammarTopic
+            
         })
         const  FeedBack = {
-            GrammerFeedback: response.GrammarFeedback,
+            GrammarFeedback: response.GrammarFeedback,
             VocabularyFeedback: response.VocabularyFeedback,
             ComprehensionFeedback: response.ComprehensionFeedback,
         }

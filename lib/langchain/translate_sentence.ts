@@ -2,7 +2,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createLLM } from "./llm";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { z } from "zod";
-const llm = createLLM("meta-llama/llama-4-maverick:free", "https://openrouter.ai/api/v1", 0);
+const llm = createLLM("google/gemini-2.0-flash-lite-001", "https://openrouter.ai/api/v1", 0.2);
 
 const translate = z.object({
   translation: z.record(z.array(z.string())).describe("The translated words with original as key")
@@ -13,8 +13,8 @@ const formatInstructions = parser.getFormatInstructions();
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", `
-You are a translator who specializes in translating the given sentence into English, word for word.
-For each word in the original sentence, provide possible English translations.
+You are a translator who specializes in translating the given sentence into English or {userlang}, word for word.
+For each word in the original sentence, provide possible English or {userlang} translations.
 
 IMPORTANT The response must be in the following format:
 {format}

@@ -12,7 +12,7 @@ interface FormDataType {
     userLevel: string;
     topic: string;
     targetGrammarTopic: string;
-    targetGrammerTopic?: string; // For backwards compatibility
+    targetGrammerTopic?: string; 
     difficulty: string;
     userLanguage: string;
 }
@@ -35,7 +35,6 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
         if (formData.userLevel && isValidLevel(formData.userLevel)) {
             setAvailableGrammarTopics(GRAMMAR_TOPICS_BY_LEVEL[formData.userLevel]);
             
-            // Reset grammar topic if current selection is not in the new list
             const topicsForLevel = GRAMMAR_TOPICS_BY_LEVEL[formData.userLevel];
             const currentTopic = formData.targetGrammarTopic || formData.targetGrammerTopic;
             if (currentTopic && !topicsForLevel.includes(currentTopic)) {
@@ -48,9 +47,7 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Main form section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left column */}
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="userLevel" className="text-zinc-300 font-medium">
@@ -126,7 +123,6 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                     </div>
                 </div>
 
-                {/* Right column */}
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="topic" className="text-zinc-300 font-medium">
@@ -181,7 +177,6 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                 </div>
             </div>
 
-            {/* Generate button */}
             <div className="pt-4">
                 <Separator className="mb-6 bg-zinc-700" />
                 <Button

@@ -54,7 +54,6 @@ export type AnalyzeQuestion = {
 }
 
 export async function analyzeQuestion(AnalyzeQuestion: AnalyzeQuestion) {
-  console.log("triggered");
 
   const { generatedQuestion, userResponse, userLevel, userLanguage } = AnalyzeQuestion;
   const params = new URLSearchParams({
@@ -77,6 +76,30 @@ export async function analyzeQuestion(AnalyzeQuestion: AnalyzeQuestion) {
 
   return response.json();
 }
+
+export async function analyzeResponse(AnalyzeQuestion: AnalyzeQuestion) {
+
+  const { generatedQuestion, userResponse, userLevel, userLanguage } = AnalyzeQuestion;
+  const params = new URLSearchParams({
+    generatedQuestion,
+    userResponse,
+    userLevel,
+    userLanguage
+  });
+
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+  const host = process.env.VERCEL_URL || "localhost:3000";
+  const baseUrl = `${protocol}://${host}`;
+
+  const response = await fetch(`${baseUrl}/api/response-question/analyz?${params}`, {
+    method: "GET",
+    cache: "no-store"
+  });
+
+
+  return response.json();
+}
+
 
 
 

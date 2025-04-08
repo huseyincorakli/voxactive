@@ -1,7 +1,8 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Annotation, StateGraph } from "@langchain/langgraph";
-import { defaultLLM } from "./llm";
+import { createLLM } from "./llm";
 
+const llm = createLLM("google/gemini-2.0-flash-lite-001", "https://openrouter.ai/api/v1", 1);
 const ResponseAnalysisState = Annotation.Root({
     GeneratedQuestion: Annotation<string>,   
     UserResponse: Annotation<string>,         
@@ -53,7 +54,7 @@ const ResponseAnalysisPrompt = ChatPromptTemplate.fromTemplate(`
   
   CONTENT FEEDBACK: [Feedback on how well the user responded to the question, in {UserLanguage}]
   
-  CORRECTED RESPONSE: [A grammatically corrected version of the user's response in English, keeping the same content]
+  CORRECTED RESPONSE: [If the user has any answer, correct and improve it grammatically, if not, show how to give an appropriate answer to the question. Just send the answer and make sure it is in “English”]
   
   IMPROVED RESPONSE: [An enhanced version of the response showing better vocabulary and structure while maintaining the user's original meaning]
   
@@ -63,7 +64,7 @@ const ResponseAnalysisPrompt = ChatPromptTemplate.fromTemplate(`
   Ensure your analysis is appropriate for a {UserLevel} CEFR level language learner. Be encouraging while providing constructive feedback.
 `)
 
-const responseAnalysisChain = ResponseAnalysisPrompt.pipe(defaultLLM)
+const responseAnalysisChain = ResponseAnalysisPrompt.pipe(llm)
 
 async function analyzeResponse(state: typeof ResponseAnalysisState.State) {
   const msg = await responseAnalysisChain.invoke({
@@ -75,7 +76,6 @@ async function analyzeResponse(state: typeof ResponseAnalysisState.State) {
   });
 
   const content = msg.content as string;
-  console.log("Content:", content);
   
   const grammarMatch = content.match(/GRAMMAR FEEDBACK:([^]*?)(?=VOCABULARY FEEDBACK:|$)/s);
   const vocabMatch = content.match(/VOCABULARY FEEDBACK:([^]*?)(?=CONTENT FEEDBACK:|$)/s);

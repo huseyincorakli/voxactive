@@ -6,7 +6,9 @@ const AnswerAnalysisState = Annotation.Root({
     GeneratedQuestion: Annotation<string>,   
     UserResponse: Annotation<string>,         
     UserLevel: Annotation<string>,
-    UserLanguage:Annotation<string>,           
+    UserLanguage:Annotation<string>,
+    TargetGrammarTopic: Annotation<string>,
+
     
     GrammarFeedback: Annotation<string>,      
     VocabularyFeedback: Annotation<string>,   
@@ -29,6 +31,7 @@ const AnswerAnalysisState = Annotation.Root({
     1. Grammar:
        - Identify any grammatical errors in the translation
        - Provide specific feedback on grammar usage
+       -Pay special attention to the use of {TargetGrammarTopic} in their response
     
     2. Vocabulary:
        - Evaluate the vocabulary used in the translation
@@ -63,7 +66,8 @@ const AnswerAnalysisState = Annotation.Root({
       GeneratedQuestion: state.GeneratedQuestion,
       UserLevel: state.UserLevel,
       UserResponse: state.UserResponse,
-      UserLanguage:state.UserLanguage
+      UserLanguage:state.UserLanguage,
+      TargetGrammarTopic:state.TargetGrammarTopic
     });
   
     const content = msg.content as string;

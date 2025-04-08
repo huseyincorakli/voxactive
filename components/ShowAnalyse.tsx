@@ -17,9 +17,10 @@ import { Separator } from "@/components/ui/separator";
 import AudioPlayer from './Audio';
 
 interface FeedbackData {
-    GrammerFeedback?: string;
+    GrammarFeedback?: string;
     VocabularyFeedback?: string;
     ComprehensionFeedback?: string;
+    ContentFeedback?: string;
 }
 
 interface AnalysisResult {
@@ -38,16 +39,14 @@ interface ShowAnalyseProps {
 }
 
 const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResult }) => {
-    // Function to check if we have valid data to display
+    
     const hasValidData = () => {
         if (!analysisResult) return false;
 
-        // Check for new data structure
         if (analysisResult.data?.FeedBack || analysisResult.data?.CorrectedResponse) {
             return true;
         }
 
-        // Check for old data structure (Content field)
         if (analysisResult.Content) {
             return true;
         }
@@ -55,12 +54,11 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
         return false;
     };
 
-    // Get sections from new data structure
     const getFeedbackSections = () => {
         const sections = [
             {
                 title: "Grammar Feedback",
-                content: analysisResult?.data?.FeedBack?.GrammerFeedback || "",
+                content: analysisResult?.data?.FeedBack?.GrammarFeedback || "",
                 icon: "📝",
                 color: "bg-blue-900/20 border-blue-700"
             },
@@ -72,7 +70,7 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
             },
             {
                 title: "Comprehension Feedback",
-                content: analysisResult?.data?.FeedBack?.ComprehensionFeedback || "",
+                content: analysisResult?.data?.FeedBack?.ComprehensionFeedback || analysisResult?.data?.FeedBack?.ContentFeedback || "",
                 icon: "🧠",
                 color: "bg-amber-900/20 border-amber-700"
             },
@@ -87,8 +85,8 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
         return sections;
     };
 
-    // Parse content sections from the old data structure (Content string)
     const parseContentString = (content: string) => {
+        
         const sectionDefinitions = [
             {
                 key: "GRAMMAR FEEDBACK",
@@ -116,7 +114,6 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
             }
         ];
 
-        // Initialize the sections with empty content
         const sections = sectionDefinitions.map(def => ({
             title: def.title,
             content: "",
@@ -124,7 +121,6 @@ const ShowAnalyse: React.FC<ShowAnalyseProps> = ({ isOpen, onClose, analysisResu
             color: def.color
         }));
 
-        // Extract content for each section
         sectionDefinitions.forEach((def, index) => {
             const regex = new RegExp(`${def.key}:\\s*(.+?)(?=\\b[A-Z]+ FEEDBACK:|CORRECTED TRANSLATION:|$)`, 's');
             const match = content.match(regex);
