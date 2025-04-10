@@ -132,7 +132,7 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                             id="topic"
                             value={formData.topic}
                             onChange={(e) => handleChange("topic", e.target.value)}
-                            className="bg-zinc-800 border-zinc-700 text-white max-w-xs"
+                            className="bg-zinc-800 border-zinc-700 text-white max-w-[17rem]"
                             placeholder="e.g. Travel, Family, Work, etc."
                         />
                         <p className="text-xs text-zinc-500 mt-1">
@@ -149,7 +149,7 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                                 value={formData.targetGrammarTopic || formData.targetGrammerTopic || ""}
                                 onValueChange={(value) => handleChange("targetGrammarTopic", value)}
                             >
-                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white max-w-xs">
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white max-w-[17rem]">
                                     <SelectValue placeholder="Select grammar topic" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-800 border-zinc-700 text-white max-h-60 ">
