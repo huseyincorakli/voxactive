@@ -26,12 +26,10 @@ const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   - Medium: 1 sentence with slightly more vocabulary. Max 8-10 words.
   - Hard: 2-3 sentences that provide context before asking the question. Use more specific vocabulary.
   - Expert: 3-4 sentences with complex structure, connecting ideas and providing detailed context.
-
+  IMPORTANT: {TargetGrammarTopic} make sure to create a question in the grammar concept
   IMPORTANT: Generate ONLY ONE QUESTION. Do not use multiple question marks or create multiple questions.
   IMPORTANT: Always try to create different questions each time. Previous questions to the user are: {PreviousQuestions}
   !IMPORTANT: You should make sure that the created question follows proper English grammar rules.
-  
-  The question must be something that requires a personal response from the user, like "What is your job?" or "How do you spend your free time?"
   
   Response format: Return ONLY the question with no additional text.
 `)
