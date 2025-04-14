@@ -18,7 +18,7 @@ export const TTS = async (
     text :string) => {
     try {
         // Convert text to speech
-        const audioStream = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
+        const audioStream = await client.textToSpeech.convert("FGY2WhTYpPnrIDTdsKH5", {
             output_format: "mp3_44100_128",
             text: text,
             model_id: "eleven_flash_v2_5"
