@@ -315,7 +315,7 @@ const TalkAI = () => {
             )}
             {isTranscribing && (
               <div className="flex items-center justify-center gap-2 py-2">
-                <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
               </div>
             )}
             <div ref={messagesEndRef} />

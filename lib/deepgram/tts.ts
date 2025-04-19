@@ -16,10 +16,10 @@ export interface TTSResponse {
 }
 
 export enum Models{
-    AMERICAN_FEMALE='aura-stella-en',
-    BRITISH_FEMALE='aura-athena-en',
-    AMERICAN_MALE='aura-arcas-en',
-    BRITISH_MALE='aura-helios-en'
+    AMERICAN_FEMALE='aura-2-callista-en',
+    BRITISH_FEMALE='aura-2-pandora-en',
+    AMERICAN_MALE='aura-2-aries-en',
+    BRITISH_MALE='aura-2-draco-en'
 }
 
 const deepgramClient = createClient(deepgramApiKey);
