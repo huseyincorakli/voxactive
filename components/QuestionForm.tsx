@@ -124,11 +124,12 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                 </div>
 
                 <div className="space-y-4">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label htmlFor="topic" className="text-zinc-300 font-medium">
                             Topic / Subject
                         </Label>
                         <Input
+                            disabled
                             id="topic"
                             value={formData.topic}
                             onChange={(e) => handleChange("topic", e.target.value)}
@@ -138,7 +139,7 @@ const QuestionForm = ({ handleSubmit, formData, handleChange, isLoading }: Quest
                         <p className="text-xs text-zinc-500 mt-1">
                             What would you like the question to be about?
                         </p>
-                    </div>
+                    </div> */}
 
                     <div className="space-y-2">
                         <Label htmlFor="targetGrammarTopic" className="text-zinc-300 font-medium">

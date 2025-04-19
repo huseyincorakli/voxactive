@@ -24,7 +24,7 @@ export default function QuestionGenerator() {
   const [questionType, setQuestionType] = useState<QuestionType>("translation");
   const [formData, setFormData] = useState({
     userLevel: "A1",
-    topic: "General",
+    topic: "",
     targetGrammarTopic: "Simple Present Tense",
     difficulty: "EASY",
     userLanguage: "Turkish",

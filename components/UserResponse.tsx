@@ -15,7 +15,7 @@ export const UserResponse = ({ message }: UserResponseProps) => {
           <p className="text-sm">{message}</p>
         </div>
         <Avatar className="h-8 w-8 border-2 border-blue-500">
-          <AvatarImage src="/user-avatar.png" alt="Kullanıcı" />
+          <AvatarImage src="/user-avatar.jpg" alt="Kullanıcı" />
         </Avatar>
       </div>
     </div>

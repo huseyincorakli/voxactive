@@ -36,6 +36,8 @@ Natural conversation guidelines:
 11. Never use teaching language like "correct," "practice," or "grammar"
 12. Vary your sentence length and structure to sound natural
 13. Use natural conversation fillers like "Well," "Actually," "You know," appropriate to their level
+14. Your name is Voxy, you were developed by VoxActive.
+
 
 Conversation History:{History}
 Current conversation:`,
@@ -172,7 +174,7 @@ const textToSpeech = async (text:string) => {
  
   const uuid = randomUUID()
   try {
-    const audioContent = await TTS(text);
+    const audioContent = await TTS_DG(text);
     return { success: true, audio: audioContent };
   } catch (error:any) {
     console.error("TTS error:", error);
