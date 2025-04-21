@@ -9,7 +9,6 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { href: "/learn/wal", label: "Watch and Learn" },
   { href: "/learn/practice", label: "Practice" },
   {href:"/learn/talk", label:"Talk"},
 ];
