@@ -23,12 +23,16 @@ const Header = () => {
   };
 
   return (
-    <header className="relative flex flex-wrap sm:justify-start sm:flex-nowrap w-full text-lg py-3" role="banner">
+    <header 
+  className="relative flex flex-wrap sm:justify-start sm:flex-nowrap w-full text-lg py-3" 
+  role="banner"
+>
+<div className="w-full px-4 sm:px-6 mx-auto sm:flex sm:items-center sm:justify-between">
       <nav className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between 
       rounded-xl border-zinc-800 border  shadow-sm p-3  bg-zinc-900" aria-label="Main navigation">
         <div className="flex items-center justify-between">
           <a className="flex-none text-3xl font-semibold focus:outline-hidden focus:opacity-80" href="/" aria-label="VoxActive">
-            VoxActive
+          <span className="text-blue-400 text-3xl font-bold">Vox</span>Active
           </a>
           <div className="sm:hidden">
             <button
@@ -71,6 +75,7 @@ const Header = () => {
           </div>
         </div>
       </nav>
+      </div>
     </header>
   );
 };

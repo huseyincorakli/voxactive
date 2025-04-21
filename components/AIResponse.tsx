@@ -2,8 +2,10 @@
 import { Volume2, ThumbsUp, ThumbsDown } from "lucide-react";
 import React, { useEffect } from "react";
 import { Avatar,  AvatarImage } from "@/components/ui/avatar"
+import { DisplayQuestion } from "./DisplayQuestion";
+import { DisplaySentence } from "./DisplaySentence";
 
-const AIResponse = ({ response, audioBase64 }: { response: string, audioBase64: string }) => {
+const AIResponse = ({ response, audioBase64,userLang }: { response: string, audioBase64: string, userLang:string }) => {
   useEffect(() => {
     if (audioBase64) {
       playAudio(audioBase64);
@@ -44,9 +46,12 @@ const AIResponse = ({ response, audioBase64 }: { response: string, audioBase64: 
 
         {/* Content */}
         <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent overflow */}
-          <p className="text-zinc-100 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4 break-words">
+          {/* <p className="text-zinc-100 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4 break-words">
+            
             {response || "Merhaba! Size nasıl yardımcı olabilirim?"}
-          </p>
+          </p> */}
+            {/* 2.Option */}
+            <DisplaySentence htmlContent={response} questionType="translation" userlang={userLang}/>
 
           {/* Action Buttons - Adjusted spacing for mobile */}
           <div className="flex items-center gap-1 sm:gap-2">

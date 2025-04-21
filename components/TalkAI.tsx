@@ -221,7 +221,7 @@ const TalkAI = () => {
       );
     }
 
-    return <AIResponse response={message.text} audioBase64={message.audioBase64} />;
+    return <AIResponse userLang={conversationParams.UserLanguage} response={message.text} audioBase64={message.audioBase64} />;
   };
 
   // Effects
@@ -254,7 +254,7 @@ const TalkAI = () => {
         <CardHeader className="border-b border-zinc-800 p-3 sm:p-4 sticky top-0 bg-zinc-900/80 z-10">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-400 animate-pulse" />
-            <h2 className="text-sm sm:text-xl font-semibold">Talk With AI</h2>
+            <h2 className="text-sm sm:text-xl font-semibold">Talk With Voxy. Voxy is good friend</h2>
           </div>
         </CardHeader>
 
@@ -313,7 +313,7 @@ const TalkAI = () => {
                 </Button>
               </div>
             )}
-            {isTranscribing && (
+            {(isTranscribing || loading) && (
               <div className="flex items-center justify-center gap-2 py-2">
                 <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
               </div>
