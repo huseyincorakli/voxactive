@@ -273,12 +273,11 @@ const TalkAI = () => {
                           showAudio={false}
                         />
                         <Button
-                          size="sm"
-                          className="h-8 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-700 gap-1 transition-all hover:shadow-blue-500/30 hover:shadow-md"
+                        variant="outline" size="sm" className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
                           onClick={handleReplyWithText}
                         >
-                          <Type size={14} />
-                          <span className="hidden sm:inline">Reply with Text</span>
+                          <Type className="h-3 w-3  mr-1" />
+                          <span className="text-xs">Reply with Text</span>
                           <span className="sm:hidden">Text</span>
                         </Button>
                       </div>

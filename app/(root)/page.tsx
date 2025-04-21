@@ -7,10 +7,10 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-          Learn English <span className="text-blue-600">Naturally</span>
+          Learn English With <span className="text-blue-600">AI</span>
         </h1>
         <p className="text-xl text-gray-200 mb-10 max-w-3xl mx-auto">
-          VoxActive helps you achieve fluency through personalized conversations, interactive exercises, and real-world practice.
+        Practice and learn English by asking and answering questions, translating texts and engaging in conversation with AI - your path to language fluency.
         </p>
         
       </section>
