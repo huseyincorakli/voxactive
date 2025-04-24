@@ -30,7 +30,7 @@ ELEVENLABS_KEY=your ElevenLabs API key (optional)
 
 ```
 
-### 3. Start the Development Server
+## 3. Start the Development Server
 ```bash 
 npm run dev
 ```
