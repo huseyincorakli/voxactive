@@ -1,9 +1,13 @@
 "use server";
 
+import { responseAnalysisGraph } from "@/lib/langchain/analyze_q_response";
+import { answerAnalysisGraph } from "@/lib/langchain/analyze_question";
+import { createResponseQuestionGraph } from "@/lib/langchain/create_response_question";
+import { createQuestionGraph } from "@/lib/langchain/generate_question";
 import { TalkAIApp } from "@/lib/langchain/talk_ai";
 
 interface TalkAIParams {
-  UserLevel: string;  // Büyük harfle başlayacak şekilde düzeltildi
+  UserLevel: string;  
   Topic: string;
   UserInput: string;
   History?: string;
@@ -40,28 +44,29 @@ export async function generateQuestion(formData: any) {
     }
   }
 
-  const params = new URLSearchParams({
-    userLevel,
-    topic,
-    targetGrammerTopic,
-    difficulty,
-    userLanguage,
-    previousQuestion: JSON.stringify(previousQuestions),
-  });
+  try {
+    const response = await createQuestionGraph.invoke({
+      UserLevel: userLevel,
+      Topic: topic,
+      TargetGrammerTopic: targetGrammerTopic,
+      Difficulty: difficulty,
+      UserLanguage: userLanguage,
+      PreviousQuestions: previousQuestions,
+    });
 
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.BASE_URL || "localhost:3000";
-  const baseUrl = `${protocol}://${host}`;
-
-  const response = await fetch(
-    `${baseUrl}/api/question/generateQuestion?${params}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
-
-  return response.json();
+    return {
+      success: true,
+      data: response.GeneratedQuestion,
+      tips: response.Tips,
+    };
+  } catch (error) {
+    console.error("Error generating question:", error);
+    return {
+      success: false,
+      data: "",
+      message: error.message || "An error occurred while generating the question.",
+    };
+  }
 }
 
 export type AnalyzeQuestion = {
@@ -72,54 +77,75 @@ export type AnalyzeQuestion = {
 };
 
 export async function analyzeQuestion(AnalyzeQuestion: AnalyzeQuestion) {
-  const { generatedQuestion, userResponse, userLevel, userLanguage } =
-    AnalyzeQuestion;
-  const params = new URLSearchParams({
-    generatedQuestion,
-    userResponse,
-    userLevel,
-    userLanguage,
-  });
+  const { generatedQuestion, userResponse, userLevel, userLanguage } = AnalyzeQuestion;
 
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.BASE_URL || "localhost:3000";
-  const baseUrl = `${protocol}://${host}`;
+  try {
+    const response = await answerAnalysisGraph.invoke({
+      GeneratedQuestion: generatedQuestion,
+      UserLevel: userLevel,
+      UserResponse: userResponse,
+      UserLanguage: userLanguage,
+    });
 
-  const response = await fetch(
-    `${baseUrl}/api/question/analyseQuestion?${params}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
-  console.log(response);
+    const FeedBack = {
+      GrammarFeedback: response.GrammarFeedback,
+      VocabularyFeedback: response.VocabularyFeedback,
+      ComprehensionFeedback: response.ComprehensionFeedback,
+    };
+    const CorrectedResponse = response.CorrectedResponse;
 
-  return response.json();
+    return {
+      success: true,
+      data: {
+        FeedBack,
+        CorrectedResponse,
+      },
+    };
+  } catch (error) {
+    console.error("Error analyzing question:", error);
+    return {
+      success: false,
+      data: "",
+      message: error.message || "An error occurred while analyzing the question.",
+    };
+  }
 }
 
 export async function analyzeResponse(AnalyzeQuestion: AnalyzeQuestion) {
-  const { generatedQuestion, userResponse, userLevel, userLanguage } =
-    AnalyzeQuestion;
-  const params = new URLSearchParams({
-    generatedQuestion,
-    userResponse,
-    userLevel,
-    userLanguage,
-  });
+  const { generatedQuestion, userResponse, userLevel, userLanguage } = AnalyzeQuestion;
 
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.BASE_URL || "localhost:3000";
-  const baseUrl = `${protocol}://${host}`;
+  try {
+    const response = await responseAnalysisGraph.invoke({
+      GeneratedQuestion: generatedQuestion,
+      UserLevel: userLevel,
+      UserResponse: userResponse,
+      UserLanguage: userLanguage,
+    });
 
-  const response = await fetch(
-    `${baseUrl}/api/response-question/analyz?${params}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
+    const FeedBack = {
+      GrammarFeedback: response.GrammarFeedback,
+      VocabularyFeedback: response.VocabularyFeedback,
+      ContentFeedback: response.ContentFeedback,
+    };
+    const CorrectedResponse = response.CorrectedResponse;
+    const ImprovedResponse = response.ImprovedResponse;
 
-  return response.json();
+    return {
+      success: true,
+      data: {
+        FeedBack,
+        CorrectedResponse,
+        ImprovedResponse,
+      },
+    };
+  } catch (error) {
+    console.error("Error analyzing response:", error);
+    return {
+      success: false,
+      data: "",
+      message: error.message || "An error occurred while analyzing the response.",
+    };
+  }
 }
 
 export async function generateResponseQuestion(formData: any) {
@@ -151,28 +177,29 @@ export async function generateResponseQuestion(formData: any) {
     }
   }
 
-  const params = new URLSearchParams({
-    userLevel,
-    topic,
-    targetGrammarTopic,
-    difficulty,
-    userLanguage,
-    previousQuestion: JSON.stringify(previousQuestions),
-  });
+  try {
+    const response = await createResponseQuestionGraph.invoke({
+      UserLevel: userLevel,
+      Topic: topic,
+      TargetGrammarTopic: targetGrammarTopic,
+      Difficulty: difficulty,
+      UserLanguage: userLanguage,
+      PreviousQuestions: previousQuestions,
+    });
 
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.BASE_URL || "localhost:3000";
-  const baseUrl = `${protocol}://${host}`;
-
-  const response = await fetch(
-    `${baseUrl}/api/response-question/generate?${params}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
-
-  return response.json();
+    return {
+      success: true,
+      data: response.GeneratedQuestion,
+      tips: response.AnswerTips,
+    };
+  } catch (error) {
+    console.error("Error generating response question:", error);
+    return {
+      success: false,
+      data: "",
+      message: error.message || "An error occurred while generating the response question.",
+    };
+  }
 }
 
 export async function talkAI(params: TalkAIParams) {
