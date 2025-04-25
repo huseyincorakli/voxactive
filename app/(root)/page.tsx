@@ -5,7 +5,6 @@ import { ArrowRight } from "lucide-react";
 export default function Home() {
   return (
     <div className="w-full">
-      <Test/>
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
