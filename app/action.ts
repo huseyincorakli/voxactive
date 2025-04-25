@@ -50,7 +50,7 @@ export async function generateQuestion(formData: any) {
   });
 
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.VERCEL_URL || "localhost:3000";
+  const host = process.env.BASE_URL || "localhost:3000";
   const baseUrl = `${protocol}://${host}`;
 
   const response = await fetch(
@@ -82,7 +82,7 @@ export async function analyzeQuestion(AnalyzeQuestion: AnalyzeQuestion) {
   });
 
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.VERCEL_URL || "localhost:3000";
+  const host = process.env.BASE_URL || "localhost:3000";
   const baseUrl = `${protocol}://${host}`;
 
   const response = await fetch(
@@ -108,7 +108,7 @@ export async function analyzeResponse(AnalyzeQuestion: AnalyzeQuestion) {
   });
 
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.VERCEL_URL || "localhost:3000";
+  const host = process.env.BASE_URL || "localhost:3000";
   const baseUrl = `${protocol}://${host}`;
 
   const response = await fetch(
@@ -161,7 +161,7 @@ export async function generateResponseQuestion(formData: any) {
   });
 
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const host = process.env.VERCEL_URL || "localhost:3000";
+  const host = process.env.BASE_URL || "localhost:3000";
   const baseUrl = `${protocol}://${host}`;
 
   const response = await fetch(
