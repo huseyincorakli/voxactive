@@ -13,10 +13,13 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",  // `any` kullanımına izin ver
-      "@typescript-eslint/no-unused-vars": "off",  // Kullanılmayan değişkenlere uyarı vermez
-      "react-hooks/exhaustive-deps": "off", // React hook bağımlılıklarını kontrol etmeyi devre dışı bırak
-      "@next/next/no-html-link-for-pages": "off", // `<a>` elementleri için uyarıları devre dışı bırak
+      "@typescript-eslint/no-explicit-any": "off", 
+      "@typescript-eslint/no-unused-vars": "off",  
+      "react-hooks/exhaustive-deps": "off", 
+      "@next/next/no-html-link-for-pages": "off",
+
+      "@typescript-eslint/no-require-imports": "off", 
+      "react/no-unescaped-entities": "off", 
     },
   },
 ];
