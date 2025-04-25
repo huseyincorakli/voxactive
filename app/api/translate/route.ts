@@ -1,5 +1,6 @@
 import { translateSentence } from '@/lib/langchain/translate_sentence';
 import { NextRequest, NextResponse } from 'next/server';
+
 export async function POST(request: NextRequest) {
     const { word,userlang } = await request.json() as { word: string,userlang:string };
     const cleanedWord = word

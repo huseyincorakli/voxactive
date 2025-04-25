@@ -238,7 +238,6 @@ export default function QuestionGenerator() {
     setAnalysisResult(null);
   }, []);
 
-  // Effect for warning about long history
   useEffect(() => {
     if (previousQuestions.join().length > 1000) {
       toast.warning(
@@ -254,7 +253,6 @@ export default function QuestionGenerator() {
     }
   }, [previousQuestions, handleReset]);
 
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       debouncedSetTranscript.cancel();
