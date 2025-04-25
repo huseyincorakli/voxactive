@@ -89,7 +89,8 @@ Important: You just have to give an answer with a correction. Don't say hello or
 const TalkAIState = Annotation.Root({
   UserLevel: Annotation<string>(),
   Topic: Annotation<string>(),
-  UserInput: Annotation<string>() || "NULL",
+  UserInput: Annotation<string>(),
+
   AIOutput: Annotation<string>(),
   History: Annotation<string>(),
   HasGrammarError: Annotation<boolean>(),
