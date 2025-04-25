@@ -23,12 +23,11 @@ export async function GET(request: Request) {
 
   try {
     const result = await talkAI({
-      userLevel,
-      topic,
-      targetGrammarTopic,
-      userInput,
-      userLanguage,
-      history,
+      UserLevel:userLevel,
+      Topic:topic,
+      UserInput:userInput,
+      UserLanguage:userLanguage,
+      History:history,
       threadId
     });
 
