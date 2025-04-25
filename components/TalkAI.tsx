@@ -123,7 +123,7 @@ const TalkAI = () => {
         History: "",
         UserLanguage: conversationParams.UserLanguage,
         threadId: "session_" + Date.now(),
-      });
+      }) as any;
 
       if (result.data && result.success) {
         setMessages([
@@ -178,7 +178,7 @@ const TalkAI = () => {
         History: prepareHistory(updatedMessages),
         UserLanguage: conversationParams.UserLanguage,
         threadId: "user_session_" + Date.now(),
-      });
+      }) as any;
 
       if (result.data && result.success) {
         setMessages((prev) => [
