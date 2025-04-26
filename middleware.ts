@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const apiKey = process.env.API_SECRET_KEY
-  const url = request.nextUrl.origin
+  const url = process.env.NEXT_PUBLIC_BASE_URL
   console.log('Attempting to track usage for IP:', ip)
   console.log('API URL:', `${url}/api/usage`)
   try {
