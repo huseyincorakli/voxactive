@@ -1,4 +1,3 @@
-import { Test } from "@/components/deneme";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 

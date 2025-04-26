@@ -3,10 +3,29 @@ import type { NextRequest } from 'next/server'
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-  const ip = request.headers.get('x-real-ip') ||request.headers.get('x-forwarded-for')
-  console.log(ip);
-  
+  // API isteklerini middleware'dan hariç tut
+  if (request.nextUrl.pathname.startsWith('/api/usage')) {
+    return NextResponse.next()
+  }
+
+  const apiKey = process.env.API_SECRET_KEY
+  const url = request.nextUrl.origin
+
+  try {
+    await fetch(`${url}/api/usage`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey!
+      },
+    })
+  } catch (error) {
+    console.error('Usage tracking failed:', error)
+  }
+
+  return NextResponse.next()
 }
+
 
 // See "Matching Paths" below to learn more
 export const config = {
