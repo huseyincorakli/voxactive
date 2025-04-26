@@ -5,8 +5,6 @@ import { answerAnalysisGraph } from "@/lib/langchain/analyze_question";
 import { createResponseQuestionGraph } from "@/lib/langchain/create_response_question";
 import { createQuestionGraph } from "@/lib/langchain/generate_question";
 import { TalkAIApp } from "@/lib/langchain/talk_ai";
-import { translateSentence } from "@/lib/langchain/translate_sentence";
-import { getUsages } from "@/lib/lowdb/db";
 
 interface TalkAIParams {
   UserLevel: string;  
