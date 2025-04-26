@@ -94,7 +94,7 @@ export async function getUsage(ip: string): Promise<Usage | null> {
     const collection = db.collection<Usage>(collectionName);
   
     // Önce mevcut kaydı al
-    let usage = await collection.findOne({ userIp: ip });
+    const usage = await collection.findOne({ userIp: ip });
   
     // Gün kontrolü (UTC bazlı)
     const now = new Date();
