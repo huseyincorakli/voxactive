@@ -1,7 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
 import * as dotenv from "dotenv";
-import { cookies } from "next/headers";
-import { createUsage } from "../db/db";
 
 dotenv.config();
 
@@ -22,9 +20,7 @@ const createLLM = (
       {
         
         async handleLLMEnd(output) {
-          const cookieStore = cookies();
-          const userIp = (await cookieStore).get('user_ip')?.value; 
-          console.log("cookie ip in llm",userIp);
+          
           const tokensUsed = output.llmOutput?.tokenUsage.totalTokens || 0;
           if (typeof tokenUsage !== 'number') tokenUsage = 0;
           tokenUsage += tokensUsed;
