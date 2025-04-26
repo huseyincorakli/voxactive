@@ -29,7 +29,6 @@ const createLLM = (
           if (typeof tokenUsage !== 'number') tokenUsage = 0;
           tokenUsage += tokensUsed;
           console.log(`Added ${tokensUsed} tokens. Total: ${tokenUsage}`);
-          await createUsage(userIp,tokensUsed)
         },
       },
     ],
