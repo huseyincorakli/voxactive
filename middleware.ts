@@ -3,32 +3,47 @@ import type { NextRequest } from 'next/server'
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')
-  // API isteklerini middleware'dan hariç tut
-  if (request.nextUrl.pathname.startsWith('/api/usage')) {
-    return NextResponse.next()
+  // Gerçek IP adresini al
+  const realIp = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+  console.log('Gerçek IP:', realIp)
+  
+  // Response objesini oluştur
+  const response = NextResponse.next()
+  
+  // Cookie'den mevcut IP'yi oku
+  const cookieIp = request.cookies.get('user_ip')?.value
+  
+  // IP kontrolü ve cookie işlemleri
+  if (realIp) {
+    if (!cookieIp) {
+      // Cookie'de IP yoksa ekle
+      console.log('Yeni IP cookie eklendi:', realIp)
+      response.cookies.set('user_ip', realIp, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 1 hafta
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+    } else if (cookieIp !== realIp) {
+      // IP değişmişse güncelle
+      console.log('IP değişti, cookie güncellendi:', cookieIp, '->', realIp)
+      response.cookies.set('user_ip', realIp, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+    } else {
+      console.log('IP aynı, cookie güncellenmedi')
+    }
+  } else {
+    console.log('Gerçek IP belirlenemedi')
   }
 
-  const apiKey = process.env.API_SECRET_KEY
-  const url = process.env.NEXT_PUBLIC_BASE_URL
-  console.log('Attempting to track usage for IP:', ip)
-  console.log('API URL:', `${url}/api/usage`)
-  try {
-    await fetch(`${url}/api/usage`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey!
-      },
-      body: JSON.stringify({ ip })
-    })
-  } catch (error) {
-    console.error('Usage tracking failed:', error)
-  }
-
-  return NextResponse.next()
+  return response
 }
-
 
 // See "Matching Paths" below to learn more
 export const config = {

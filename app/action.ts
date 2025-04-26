@@ -1,10 +1,12 @@
 "use server";
 
+import { createUsage } from "@/lib/db/db";
 import { responseAnalysisGraph } from "@/lib/langchain/analyze_q_response";
 import { answerAnalysisGraph } from "@/lib/langchain/analyze_question";
 import { createResponseQuestionGraph } from "@/lib/langchain/create_response_question";
 import { createQuestionGraph } from "@/lib/langchain/generate_question";
 import { TalkAIApp } from "@/lib/langchain/talk_ai";
+import { cookies } from 'next/headers';
 
 interface TalkAIParams {
   UserLevel: string;  
@@ -14,6 +16,8 @@ interface TalkAIParams {
   UserLanguage: string;
   threadId?: string;
 }
+
+
 
 export async function generateQuestion(formData: any) {
   const userLevel = formData.get("userLevel");
@@ -53,7 +57,6 @@ export async function generateQuestion(formData: any) {
       UserLanguage: userLanguage,
       PreviousQuestions: previousQuestions,
     });
-
     return {
       success: true,
       data: response.GeneratedQuestion,
@@ -244,4 +247,5 @@ export async function talkAI(params: TalkAIParams) {
     };
   }
 }
+
 

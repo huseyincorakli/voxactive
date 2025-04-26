@@ -45,16 +45,37 @@ export async function createUsage(ip: string, initialUsage: number = 0): Promise
   
       // Önce IP'nin var olup olmadığını kontrol et
       const existingUsage = await collection.findOne({ userIp: ip });
+      
       if (existingUsage) {
-        return existingUsage; // Zaten varsa mevcut kaydı döndür
+        // Kayıt varsa usage değerini initialUsage kadar artır
+        const result = await collection.findOneAndUpdate(
+          { userIp: ip },
+          { 
+            $inc: { usage: initialUsage },
+            $set: { 
+              lastReset: existingUsage.usage + initialUsage >= DAILY_LIMIT ? new Date() : existingUsage.lastReset,
+              isBlocked: existingUsage.usage + initialUsage >= DAILY_LIMIT 
+            } 
+          },
+          { 
+            returnDocument: 'after',
+            projection: { _id: 1, userIp: 1, usage: 1, lastReset: 1, isBlocked: 1, blockedUntil: 1 }
+          }
+        );
+        
+        if (!result) {
+          throw new Error("Failed to update existing usage record");
+        }
+        return result as Usage;
       }
   
       // Yeni kayıt oluştur
       const newUsage: Usage = {
         userIp: ip,
         usage: initialUsage,
-        isBlocked:false,
-        lastReset:new Date(),
+        isBlocked: initialUsage >= DAILY_LIMIT,
+        lastReset: new Date(),
+        ...(initialUsage >= DAILY_LIMIT && { blockedUntil: getNextMidnight() })
       };
   
       const result = await collection.insertOne(newUsage);
@@ -65,16 +86,21 @@ export async function createUsage(ip: string, initialUsage: number = 0): Promise
   
       return { ...newUsage, _id: result.insertedId };
     } catch (error: any) {
-      // Unique index hatasını özel olarak yakala
       if (error.code === 11000) {
         console.log(`IP ${ip} already exists`);
         return getUsage(ip) as Promise<Usage>;
       }
-      console.error("Error creating usage record:", error);
+      console.error("Error creating/updating usage record:", error);
       throw error;
     }
-  }
+}
 
+// Yardımcı fonksiyon: Gece yarısını hesapla
+function getNextMidnight(): Date {
+  const midnight = new Date();
+  midnight.setUTCHours(24, 0, 0, 0);
+  return midnight;
+}
 export async function getUsage(ip: string): Promise<Usage | null> {
     try {
       const client = await clientPromise;
