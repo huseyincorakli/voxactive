@@ -245,16 +245,16 @@ const TalkAI = () => {
   return (
     <div className="flex flex-col items-center w-full h-full p-2 sm:p-4">
       <div className="text-xs text-zinc-500 mb-2">
-        Press <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded">T</kbd> for text, 
+        Press <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded">T</kbd> for text,
         <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">V</kbd> to {isRecording ? 'send' : 'start voice'}
         {isRecording && <>, <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">ESC</kbd> to cancel</>}
       </div>
 
       <Card className="bg-zinc-900/80 border-zinc-800 text-white w-full h-[80vh] sm:h-[70vh] flex flex-col backdrop-blur-sm">
         <CardHeader className="border-b border-zinc-800 p-3 sm:p-4 sticky top-0 bg-zinc-900/80 z-10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-400 animate-pulse" />
-            <h2 className="text-sm sm:text-xl font-semibold">Talk With Voxy. Voxy is good friend</h2>
+            <h2 className="text-xs sm:text-xl font-semibold">Talk With Voxy. Voxy is good friend</h2>
           </div>
         </CardHeader>
 
@@ -266,19 +266,18 @@ const TalkAI = () => {
                   <>
                     {renderMessageContent(message)}
                     {message.id === messages[messages.length - 1]?.id && (
-                      <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:ml-12">
+                      <div className="flex flex-row sm:flex-row gap-2 mt-2 sm:ml-12">
                         <VoiceRecorder
                           onRecordingComplete={handleRecordingComplete}
                           ref={voiceRecorderRef}
                           showAudio={false}
                         />
                         <Button
-                        variant="outline" size="sm" className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
+                           variant="outline" size="sm" className="h-8 bg-yellow-500 hover:bg-yellow-600 border-none text-white w-36"
                           onClick={handleReplyWithText}
                         >
                           <Type className="h-3 w-3  mr-1" />
                           <span className="text-xs">Reply with Text</span>
-                          <span className="sm:hidden">Text</span>
                         </Button>
                       </div>
                     )}
@@ -289,7 +288,10 @@ const TalkAI = () => {
               </div>
             ))}
             {showInput && (
-              <div className="flex gap-2 mt-4 sm:ml-12">
+              <div className="relative mt-4 sm:ml-12">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <MessageSquare className="h-5 w-5 text-zinc-400" />
+                </div>
                 <input
                   ref={inputRef}
                   type="text"
@@ -299,17 +301,27 @@ const TalkAI = () => {
                     setInput(e.target.value);
                   }}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Type your response..."
+                  className="block w-full pl-10 pr-12 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-sm sm:text-base placeholder-zinc-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Type your message..."
                   disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
-                <Button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() || loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white w-auto h-auto px-3"
-                >
-                  <Send size={20} className="sm:w-6 sm:h-6" />
-                </Button>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || loading}
+                    className={`p-1 rounded-full ${!input.trim() || loading ? 'text-zinc-500' : 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/30'}`}
+                  >
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
             {(isTranscribing || loading) && (
