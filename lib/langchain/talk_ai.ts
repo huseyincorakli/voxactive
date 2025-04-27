@@ -73,9 +73,9 @@ Text to check: {UserInput}`
 const GrammarCorrectionPrompt = ChatPromptTemplate.fromMessages([
   [
     "system",
-    `You are a high-level English-speaking expert with an English-speaking friend at {UserLevel}. 
+    `You are a high-level English speaking expert with a friend who speaks English at {UserLevel}. 
 Your friend made a mistake in a sentence.
-Make a friendly correction explaining the mistake and the correct form. Focus on any grammar errors you find.
+Give a friendly correction explaining the mistake and the correct form. Focus on the grammatical errors you find. The explanation should be in the {UserLanguage} and your corrections in English
 
 Student's sentence: {UserInput}
 

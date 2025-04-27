@@ -2,7 +2,6 @@
 import { Volume2, ThumbsUp, ThumbsDown } from "lucide-react";
 import React, { useEffect } from "react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
-import { DisplayQuestion } from "./DisplayQuestion";
 import { DisplaySentence } from "./DisplaySentence";
 
 const AIResponse = ({ response, audioBase64, userLang }: { response: string, audioBase64: string, userLang: string }) => {
