@@ -1,20 +1,27 @@
-// import { Test } from "@/components/deneme";
-// import { createUsage, getUsage } from "@/lib/db/db";
+"use client"
 
-export default async function TestPage() {
-  // let usages = await getUsage();
+import { decrypt, encrypt,  } from "@/lib/utils";
+import { useState } from "react";
 
-  //   await createUsage({
-  //     userId: `user_${new Date().toISOString().replaceAll('-','_').replaceAll(':','_').replaceAll('.','_')}`,
-  //     action: "first_time_setup",
-  //     timestamp: new Date(),
-  //   });
-  //   usages = await getUsage();
+export default  function TestPage() {
+  const [a,b]=useState<string>("")
+  const denemex = ()=>{
+    const y = encrypt("huseyincorakli");
+    console.log(y);
+    b(y)
+    
+  }
+
+  const denemey = ()=>{
+    const y = decrypt(a);
+    console.log(y);
+    
+  }
 
   return (
     <div>
-      {/* <Test usages={usages} /> */}
-      test
+      <button onClick={denemex}>enc</button>
+      <button onClick={denemey}>dec</button>
     </div>
   );
 }
