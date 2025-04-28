@@ -7,7 +7,9 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === "/limit-reached") {
     return NextResponse.next();
   }
-
+  if (request.nextUrl.pathname === "/") {
+    return NextResponse.next();
+  }
   const realIp =
     request.headers.get("x-real-ip") ||
     request.headers.get("x-forwarded-for")?.split(",")[0].trim();
@@ -70,7 +72,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/api/:path*",
-    "/((?!$|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/check-blocked|limit-reached).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/check-blocked|limit-reached).*)",
+    "/api/((?!check-blocked).+)",
   ],
 };

@@ -36,7 +36,7 @@ export interface Usage {
 const dbName = "voxactive";
 const collectionName = "usages";
 
-const DAILY_LIMIT = 6600;
+const DAILY_LIMIT = Number(process.env.NEXT_DAILY_LIMIT)!;
 
 export async function createUsage(
   ip: string,
