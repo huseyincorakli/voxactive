@@ -6,32 +6,57 @@ export async function middleware(request: NextRequest) {
   const realIp =
     request.headers.get("x-real-ip") ||
     request.headers.get("x-forwarded-for")?.split(",")[0].trim();
-
   const response = NextResponse.next();
 
-  console.log("next url origin", request.nextUrl.origin);
+  // Production için güvenli URL oluşturma
+  const host = request.headers.get("host") || "";
+  const protocol = host.includes("localhost") ? "http:" : "https:";
+  const baseUrl = `${protocol}//${host}`;
+
+  console.log("Environment:", process.env.NODE_ENV);
+  console.log("Host:", host);
+  console.log("Base URL:", baseUrl);
 
   if (!request.url.includes("/api/test")) {
-    fetch(`${request.nextUrl.origin}/api/test?user=${encrypt(realIp)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        // JSON verisini çözümle
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Event sent", data); // Burada gelen veri ile işlem yapabilirsiniz
-      })
-      .catch((error) => {
-        console.log("Fetching error: ", error);
+    try {
+      // Catch içindeki fetch işlemi için mutlak URL oluşturma
+      const testApiUrl = `${baseUrl}/api/test?user=${encodeURIComponent(
+        encrypt(realIp || "")
+      )}`;
+
+      console.log("Fetching URL:", testApiUrl);
+
+      // AbortController ile zaman aşımı ekleyelim
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 saniye timeout
+
+      const apiResponse = await fetch(testApiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!apiResponse.ok) {
+        throw new Error(`API responded with status: ${apiResponse.status}`);
+      }
+
+      const data = await apiResponse.json();
+      console.log("Event sent", data);
+    } catch (error) {
+      // Daha detaylı hata yakalama
+      console.log(
+        "Fetching error: ",
+        error instanceof Error ? error.message : String(error)
+      );
+      // Hata durumunda işleme devam et, middleware'i bloke etme
+    }
   }
 
   setIpCookieIfChanged(realIp, request, response);
-
   return response;
 }
 
