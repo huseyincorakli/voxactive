@@ -3,6 +3,11 @@ import type { NextRequest } from "next/server";
 import { encrypt, setIpCookieIfChanged } from "./lib/utils";
 
 export async function middleware(request: NextRequest) {
+  // Eğer zaten limit-reached sayfasına yönlendiriliyorsa, işlemi durdur
+  if (request.nextUrl.pathname === "/limit-reached") {
+    return NextResponse.next();
+  }
+
   const realIp =
     request.headers.get("x-real-ip") ||
     request.headers.get("x-forwarded-for")?.split(",")[0].trim();
@@ -17,20 +22,20 @@ export async function middleware(request: NextRequest) {
   console.log("Host:", host);
   console.log("Base URL:", baseUrl);
 
-  if (!request.url.includes("/api/test")) {
+  if (!request.url.includes("/api/check-blocked")) {
     try {
       // Catch içindeki fetch işlemi için mutlak URL oluşturma
-      const testApiUrl = `${baseUrl}/api/test?user=${encodeURIComponent(
+      const checkUrl = `${baseUrl}/api/check-blocked?user=${encodeURIComponent(
         encrypt(realIp || "")
       )}`;
 
-      console.log("Fetching URL:", testApiUrl);
+      console.log("Fetching URL:", checkUrl);
 
       // AbortController ile zaman aşımı ekleyelim
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 saniye timeout
 
-      const apiResponse = await fetch(testApiUrl, {
+      const apiResponse = await fetch(checkUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -46,6 +51,9 @@ export async function middleware(request: NextRequest) {
 
       const data = await apiResponse.json();
       console.log("Event sent", data);
+      if (data) {
+        return NextResponse.redirect(new URL("/limit-reached", baseUrl));
+      }
     } catch (error) {
       // Daha detaylı hata yakalama
       console.log(
@@ -63,6 +71,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/api/:path*",
-    "/((?!$|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/test).*)",
+    "/((?!$|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/check-blocked|limit-reached).*)",
   ],
 };
