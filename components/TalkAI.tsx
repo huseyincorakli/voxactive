@@ -8,6 +8,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { talkAI } from "@/app/action";
 import ConversationStarter from "./ConversationStarter";
 import VoiceRecorder, { VoiceRecorderRef } from "./voiceRecorder";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type ConversationParams = {
   UserLevel: string;
@@ -35,6 +37,7 @@ const TalkAI = () => {
   const voiceRecorderRef = useRef<VoiceRecorderRef>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -136,6 +139,12 @@ const TalkAI = () => {
         ]);
         setConversationStarted(true);
       }
+      else{
+        toast.error(result?.error?.message)
+        if(result.redirect){
+          router.push(`/${result.redirect}`)
+        }
+      }
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -190,6 +199,15 @@ const TalkAI = () => {
             audioBase64: result.data.SpeechOutput?.audioBase64 || null,
           },
         ]);
+      }
+      else{
+        console.log(result);
+        if(!result.success){
+          toast.error(result?.error?.message)
+          if(result.redirect){
+            router.push(`/${result.redirect}`)
+          }
+        }
       }
     } catch (error) {
       console.error("Error:", error);

@@ -198,7 +198,9 @@ export default function QuestionGenerator() {
         : await generateResponseQuestion(formDataObj);
 
       if (!result.success) {
-        toast.error(result.message?.error?.message || "An error occurred");
+        console.log(result);
+        
+        toast.error(result.message || result.message?.error?.message || "An error occurred");
         return;
       }
 
