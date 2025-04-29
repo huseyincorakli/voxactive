@@ -8,8 +8,8 @@ dotenv.config();
 let tokenUsage = 0;
 
 const createLLM = (
-  modelName = "google/gemini-2.0-flash-lite-001",
-  baseURL = "https://openrouter.ai/api/v1",
+  modelName = process.env.NEXT_DEFAULT_MODEL,
+  baseURL = process.env.NEXT_MODEL_BASEURL,
   temperature = 0
 ) => {
   return new ChatOpenAI({
@@ -36,8 +36,8 @@ const createLLM = (
 };
 
 const defaultLLM = createLLM(
-  "google/gemini-2.0-flash-lite-001",
-  "https://openrouter.ai/api/v1"
+  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL
 );
 
 export { createLLM, defaultLLM, tokenUsage };

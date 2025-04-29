@@ -5,9 +5,12 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { TTS_DG } from "../deepgram/tts";
 import { randomUUID } from "crypto";
-import { TTS } from "../elevenlabs/tts";
 
-const llm = createLLM("google/gemini-2.0-flash-lite-001", "https://openrouter.ai/api/v1", 0.5);
+const llm = createLLM(
+  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL,
+  0.5
+);
 
 const TalkAIPrompt = ChatPromptTemplate.fromMessages([
   [
@@ -66,7 +69,7 @@ STRICT RULES - YOU MUST FOLLOW THESE:
 
 If input is empty, respond with "NO"
 
-Text to check: {UserInput}`
+Text to check: {UserInput}`,
   ],
 ]);
 
@@ -96,8 +99,8 @@ const TalkAIState = Annotation.Root({
   HasGrammarError: Annotation<boolean>(),
   GrammarCorrection: Annotation<string>(),
   UserLanguage: Annotation<string>(),
-  SpeechOutput: Annotation<any>(), 
-  HasSpeechOutput: Annotation<boolean>() 
+  SpeechOutput: Annotation<any>(),
+  HasSpeechOutput: Annotation<boolean>(),
 });
 
 // Ana konuşma zinciri
@@ -106,7 +109,7 @@ const talkChain = RunnableSequence.from([
     UserLevel: (input) => input.UserLevel,
     Topic: (input) => input.Topic,
     UserInput: (input) => input.UserInput,
-    History: (input) => input.History || ""
+    History: (input) => input.History || "",
   },
   TalkAIPrompt,
   llm,
@@ -117,7 +120,7 @@ const talkChain = RunnableSequence.from([
 const grammarCheckChain = RunnableSequence.from([
   {
     UserLevel: (input) => input.UserLevel,
-    UserInput: (input) => input.UserInput
+    UserInput: (input) => input.UserInput,
   },
   GrammarCheckPrompt,
   llm,
@@ -129,7 +132,7 @@ const grammarCorrectionChain = RunnableSequence.from([
   {
     UserLevel: (input) => input.UserLevel,
     UserInput: (input) => input.UserInput,
-    UserLanguage: (input) => input.UserLanguage
+    UserLanguage: (input) => input.UserLanguage,
   },
   GrammarCorrectionPrompt,
   llm,
@@ -138,100 +141,93 @@ const grammarCorrectionChain = RunnableSequence.from([
 
 const callModel = async (state: typeof TalkAIState.State) => {
   const msg = await talkChain.invoke(state);
-  
+
   const newHistoryEntry = `User: ${state.UserInput}\nAI: ${msg}\n`;
-  const updatedHistory = state.History ? `${state.History}${newHistoryEntry}` : newHistoryEntry;
-  
+  const updatedHistory = state.History
+    ? `${state.History}${newHistoryEntry}`
+    : newHistoryEntry;
+
   return {
     ...state,
     AIOutput: msg,
-    History: updatedHistory
+    History: updatedHistory,
   };
 };
 
 const checkGrammar = async (state: typeof TalkAIState.State) => {
   const result = await grammarCheckChain.invoke(state);
   const hasError = result.trim().toUpperCase().includes("YES");
-  
+
   return {
     ...state,
-    HasGrammarError: hasError
+    HasGrammarError: hasError,
   };
 };
 
 // Gramer düzeltmesi yapan fonksiyon
 const correctGrammar = async (state: typeof TalkAIState.State) => {
-  
   const correction = await grammarCorrectionChain.invoke(state);
-  
+
   return {
     ...state,
     GrammarCorrection: correction,
-    AIOutput: correction 
+    AIOutput: correction,
   };
 };
 
 // Ses dönüşümü
-const textToSpeech = async (text:string) => {
- 
-  const uuid = randomUUID()
+const textToSpeech = async (text: string) => {
+  const uuid = randomUUID();
   try {
     const audioContent = await TTS_DG(text);
     return { success: true, audio: audioContent };
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("TTS error:", error);
     return { success: false, error: error.message };
   }
-  
 };
 
-
 const convertToSpeech = async (state: typeof TalkAIState.State) => {
-  
   if (state.AIOutput && !state.AIOutput.includes("<error-correction>")) {
-    const speechResult = await textToSpeech(state.AIOutput) as any;
-    
+    const speechResult = (await textToSpeech(state.AIOutput)) as any;
+
     return {
       ...state,
       SpeechOutput: speechResult.success ? speechResult.audio : null,
-      HasSpeechOutput: speechResult.success
+      HasSpeechOutput: speechResult.success,
     };
   } else {
     return {
       ...state,
       SpeechOutput: null,
-      HasSpeechOutput: false
+      HasSpeechOutput: false,
     };
   }
 };
 
-// Graph 
+// Graph
 const workflow = new StateGraph(TalkAIState)
-.addNode("grammarCheck", checkGrammar)
-.addNode("model", callModel)
-.addNode("grammarCorrection", correctGrammar)
-.addNode("speechConverter", convertToSpeech) 
+  .addNode("grammarCheck", checkGrammar)
+  .addNode("model", callModel)
+  .addNode("grammarCorrection", correctGrammar)
+  .addNode("speechConverter", convertToSpeech)
 
-// Başlangıçta her zaman gramer kontrolü yapılacak
-.addEdge("__start__", "grammarCheck")
+  // Başlangıçta her zaman gramer kontrolü yapılacak
+  .addEdge("__start__", "grammarCheck")
 
-// Koşullu yönlendirme için router fonksiyonu
-.addConditionalEdges(
-  "grammarCheck",
-  (state) => {
+  // Koşullu yönlendirme için router fonksiyonu
+  .addConditionalEdges("grammarCheck", (state) => {
     return state.HasGrammarError ? "grammarCorrection" : "model";
-  }
-)
+  })
 
-// Her iki nodedan da çıktığında ses dönüşüm node'una git
-.addEdge("grammarCorrection", "speechConverter")
-.addEdge("model", "speechConverter")
+  // Her iki nodedan da çıktığında ses dönüşüm node'una git
+  .addEdge("grammarCorrection", "speechConverter")
+  .addEdge("model", "speechConverter")
 
-// Ses dönüşümünden sonra bitir
-.addEdge("speechConverter", "__end__");
+  // Ses dönüşümünden sonra bitir
+  .addEdge("speechConverter", "__end__");
 
 const memory = new MemorySaver();
 const TalkAIApp = workflow.compile({ checkpointer: memory });
 
-
-export {TalkAIApp}
+export { TalkAIApp };

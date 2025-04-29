@@ -1,7 +1,6 @@
-import { ChatPromptTemplate } from "@langchain/core/prompts"
-import { Annotation, StateGraph } from "@langchain/langgraph"
-import { createLLM } from "./llm"
-
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { Annotation, StateGraph } from "@langchain/langgraph";
+import { createLLM } from "./llm";
 
 const QuestionGeneratorState = Annotation.Root({
   UserLevel: Annotation<string>,
@@ -11,8 +10,8 @@ const QuestionGeneratorState = Annotation.Root({
   Difficulty: Annotation<string>,
   GeneratedQuestion: Annotation<string>,
   Tips: Annotation<string>,
-  PreviousQuestions: Annotation<string[]>
-})
+  PreviousQuestions: Annotation<string[]>,
+});
 
 const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   Generate a single question in {UserLanguage} about {Topic} that:
@@ -32,7 +31,7 @@ const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   IMPORTANT: Always try to create different questions each time. Previous question to the user is: {PreviousQuestions}
   !IMPORTANT : You should make sure that the created question follows the rules of grammar in the {UserLanguage} language.
   Response format: Return ONLY the question with no additional text.
-`)
+`);
 
 const TranslationTipsPrompt = ChatPromptTemplate.fromTemplate(`
    You are a good English teacher and ;
@@ -56,18 +55,22 @@ const TranslationTipsPrompt = ChatPromptTemplate.fromTemplate(`
   10. Use Markdown format (for headings: “###”, for articles: “-”)
   11. Help them recognize idiomatic expressions
   12. Just give tips, don't add anything else
-`)
-const llm =  createLLM("google/gemini-2.0-flash-lite-001",
-  "https://openrouter.ai/api/v1",
-  1.5)
-const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm)
-const translationTipsChain = TranslationTipsPrompt.pipe(llm)
+`);
+const llm = createLLM(
+  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL,
+  1.5
+);
+const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm);
+const translationTipsChain = TranslationTipsPrompt.pipe(llm);
 
 async function generateQuestion(state: typeof QuestionGeneratorState.State) {
   const previousQuestions = state.PreviousQuestions || [];
-  
-  const formattedPreviousQuestions = previousQuestions.map((q, i) => `${i+1}. "${q}"`).join("\n");
-  
+
+  const formattedPreviousQuestions = previousQuestions
+    .map((q, i) => `${i + 1}. "${q}"`)
+    .join("\n");
+
   const msg = await questionGeneratorChain.invoke({
     Difficulty: state.Difficulty,
     TargetGrammerTopic: state.TargetGrammerTopic,
@@ -78,23 +81,23 @@ async function generateQuestion(state: typeof QuestionGeneratorState.State) {
   });
 
   const newQuestion = msg.content as string;
-  
- 
-  
-  return { 
+
+  return {
     GeneratedQuestion: newQuestion,
     PreviousQuestions: [...previousQuestions, newQuestion],
   };
 }
-async function generateTranslationTips(state: typeof QuestionGeneratorState.State) {
+async function generateTranslationTips(
+  state: typeof QuestionGeneratorState.State
+) {
   const msg = await translationTipsChain.invoke({
     GeneratedQuestion: state.GeneratedQuestion,
     UserLanguage: state.UserLanguage,
     UserLevel: state.UserLevel,
-    TargetGrammerTopic: state.TargetGrammerTopic
-  })
+    TargetGrammerTopic: state.TargetGrammerTopic,
+  });
 
-  return { Tips: msg.content }
+  return { Tips: msg.content };
 }
 
 const createQuestionGraph = new StateGraph(QuestionGeneratorState)

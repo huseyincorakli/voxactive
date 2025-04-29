@@ -3,18 +3,26 @@ import { createLLM } from "./llm";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { z } from "zod";
 
-const llm = createLLM("google/gemini-2.0-flash-lite-001", "https://openrouter.ai/api/v1", 0.2);
+const llm = createLLM(
+  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL,
+  0.2
+);
 
 // Define schema for sentence translations
 const translate = z.object({
-  translations: z.record(z.array(z.string())).describe("The translated sentences with original as key")
+  translations: z
+    .record(z.array(z.string()))
+    .describe("The translated sentences with original as key"),
 });
 
 const parser = StructuredOutputParser.fromZodSchema(translate);
 const formatInstructions = parser.getFormatInstructions();
 
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", `
+  [
+    "system",
+    `
 You are a professional translator specializing in translating complete sentences between English and {userlang}.
 For each input sentence, provide the most accurate and natural translation in the target language.
 
@@ -30,32 +38,36 @@ Translation Guidelines:
 
 Target Language: {userlang}
 Sentences to translate: {sentences}
-  `]
+  `,
+  ],
 ]);
 
 const chain = prompt.pipe(llm).pipe(parser);
 
-const translateSentences = async (sentences: string | string[], userlang: string) => {
+const translateSentences = async (
+  sentences: string | string[],
+  userlang: string
+) => {
   try {
     // Ensure sentences is always an array
     const sentencesArray = Array.isArray(sentences) ? sentences : [sentences];
-    
-    const response = await chain.invoke({ 
+
+    const response = await chain.invoke({
       sentences: sentencesArray.join("\n"), // Combine multiple sentences with newlines
-      userlang, 
-      format: formatInstructions 
+      userlang,
+      format: formatInstructions,
     });
-    
+
     return {
       response,
-      success: true
+      success: true,
     };
   } catch (error) {
     console.error("Translation error:", error);
-    
+
     return {
       error: "An error occurred while translating the sentences.",
-      success: false
+      success: false,
     };
   }
 };

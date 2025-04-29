@@ -1,6 +1,6 @@
-import { ChatPromptTemplate } from "@langchain/core/prompts"
-import { Annotation, StateGraph } from "@langchain/langgraph"
-import { createLLM } from "./llm"
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { Annotation, StateGraph } from "@langchain/langgraph";
+import { createLLM } from "./llm";
 
 const ResponseQuestionState = Annotation.Root({
   UserLevel: Annotation<string>,
@@ -10,8 +10,8 @@ const ResponseQuestionState = Annotation.Root({
   Difficulty: Annotation<string>,
   GeneratedQuestion: Annotation<string>,
   AnswerTips: Annotation<string>,
-  PreviousQuestions: Annotation<string[]>
-})
+  PreviousQuestions: Annotation<string[]>,
+});
 
 const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   Generate a single question in English about {Topic} that:
@@ -32,7 +32,7 @@ const QuestionGeneratorPrompt = ChatPromptTemplate.fromTemplate(`
   !IMPORTANT: You should make sure that the created question follows proper English grammar rules.
   
   Response format: Return ONLY the question with no additional text.
-`)
+`);
 
 const AnswerTipsPrompt = ChatPromptTemplate.fromTemplate(`
   You are an excellent English teacher helping a user whose native language is {UserLanguage} to answer the following question in English:
@@ -53,20 +53,24 @@ const AnswerTipsPrompt = ChatPromptTemplate.fromTemplate(`
   8. Keep explanations short but educational
   9. Use Markdown format (for headings: "###", for bullet points: "-")
   10. Just give tips, don't add anything else
-`)
+`);
 
-const llm = createLLM("google/gemini-2.0-flash-lite-001",
-  "https://openrouter.ai/api/v1",
-  1.5)
+const llm = createLLM(
+  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL,
+  1.5
+);
 
-const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm)
-const answerTipsChain = AnswerTipsPrompt.pipe(llm)
+const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm);
+const answerTipsChain = AnswerTipsPrompt.pipe(llm);
 
 async function generateQuestion(state: typeof ResponseQuestionState.State) {
   const previousQuestions = state.PreviousQuestions || [];
-  
-  const formattedPreviousQuestions = previousQuestions.map((q, i) => `${i+1}. "${q}"`).join("\n");
-  
+
+  const formattedPreviousQuestions = previousQuestions
+    .map((q, i) => `${i + 1}. "${q}"`)
+    .join("\n");
+
   const msg = await questionGeneratorChain.invoke({
     Difficulty: state.Difficulty,
     TargetGrammarTopic: state.TargetGrammarTopic,
@@ -77,8 +81,8 @@ async function generateQuestion(state: typeof ResponseQuestionState.State) {
   });
 
   const newQuestion = msg.content as string;
-  
-  return { 
+
+  return {
     GeneratedQuestion: newQuestion,
     PreviousQuestions: [...previousQuestions, newQuestion],
   };
@@ -89,10 +93,10 @@ async function generateAnswerTips(state: typeof ResponseQuestionState.State) {
     GeneratedQuestion: state.GeneratedQuestion,
     UserLanguage: state.UserLanguage,
     UserLevel: state.UserLevel,
-    TargetGrammarTopic: state.TargetGrammarTopic
-  })
+    TargetGrammarTopic: state.TargetGrammarTopic,
+  });
 
-  return { AnswerTips: msg.content }
+  return { AnswerTips: msg.content };
 }
 
 const createResponseQuestionGraph = new StateGraph(ResponseQuestionState)
