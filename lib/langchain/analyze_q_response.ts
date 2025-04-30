@@ -4,7 +4,7 @@ import { createLLM } from "./llm";
 
 const llm = createLLM(
   process.env.NEXT_DEFAULT_MODEL,
-  process.env.NEXT_DEFAULT_MODEL,
+  process.env.NEXT_MODEL_BASEURL,
   1
 );
 const ResponseAnalysisState = Annotation.Root({
