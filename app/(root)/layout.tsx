@@ -1,4 +1,5 @@
 import Header from '@/components/Header'
+import Footer from '@/components/ui/Footer'
 import React, { ReactNode } from 'react'
 
 const Layout = ({ children }: { children: ReactNode }) => {
@@ -12,6 +13,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           </div>
         </div>
       </main>
+      <Footer/>
 
     </>
   )
