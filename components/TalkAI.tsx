@@ -226,23 +226,39 @@ const TalkAI = () => {
     const hasErrorCorrection = extractErrorCorrection(message.text);
 
     if (hasErrorCorrection) {
-      const cleanMessage = message.text.replace(/<error-correction>|<\/error-correction>/g, "");
+      const cleanMessage = message.text
+        .replace(/<error-correction>|<\/error-correction>/g, "")
+        .trim();
+    
+      const [correctionLine, explanationLine] = cleanMessage.split("Explanation:");
+      const correction = correctionLine.replace("Correction:", "").trim();
+      const explanation = explanationLine?.trim();
+    
       return (
         <div className="bg-amber-900/50 border border-amber-700 text-amber-100 p-4 rounded-lg mb-2">
           <div className="flex items-start gap-2">
-            <AlertCircle className="flex-shrink-0 mt-0.5 text-amber-300" size={18} />
-            <div>
-              <p className="text-sm">{cleanMessage}</p>
+            <AlertCircle className="flex-shrink-0 mt-0.5 text-amber-300" size={16} />
+            <div className="space-y-2">
+              <div>
+                <h6 className="font-semibold text-amber-200">Correction</h6>
+                <p className="text-sm">{correction}</p>
+              </div>
+              {explanation && (
+                <div>
+                  <h6 className="font-semibold text-amber-200">Explanation</h6>
+                  <p className="text-sm">{explanation}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       );
     }
+    
 
     return <AIResponse userLang={conversationParams.UserLanguage} response={message.text} audioBase64={message.audioBase64} />;
   };
 
-  // Effects
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
