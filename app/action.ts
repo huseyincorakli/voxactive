@@ -18,6 +18,8 @@ interface TalkAIParams {
 }
 
 export async function generateQuestion(formData: any) {
+  console.log("fromdata", formData);
+
   const blocked = await isBlocked();
   if (blocked) {
     return {
@@ -28,8 +30,7 @@ export async function generateQuestion(formData: any) {
     };
   }
   const userLevel = formData.get("userLevel");
-  const topic = formData.get("topic");
-  const targetGrammerTopic = formData.get("targetGrammerTopic");
+  const targetGrammerTopic = formData.get("targetGrammarTopic");
   const difficulty = formData.get("difficulty");
   const userLanguage = formData.get("userLanguage");
 
@@ -58,11 +59,10 @@ export async function generateQuestion(formData: any) {
   try {
     const response = await createQuestionGraph.invoke({
       UserLevel: userLevel,
-      Topic: topic,
-      TargetGrammerTopic: targetGrammerTopic,
       Difficulty: difficulty,
       UserLanguage: userLanguage,
       PreviousQuestions: previousQuestions,
+      TargetGrammerTopic: targetGrammerTopic,
     });
     return {
       success: true,

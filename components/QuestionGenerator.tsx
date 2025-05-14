@@ -1,21 +1,38 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Text, RefreshCw } from "lucide-react";
-import { AnalyzeQuestion, analyzeQuestion, analyzeResponse, generateQuestion, generateResponseQuestion } from "@/app/action";
+import {
+  AnalyzeQuestion,
+  analyzeQuestion,
+  analyzeResponse,
+  generateQuestion,
+  generateResponseQuestion,
+} from "@/app/action";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
 import { toast } from "sonner";
 import TipsDrawer from "@/components/TipsDrawer";
 import { DisplayQuestion } from "@/components/DisplayQuestion";
 import ShowAnalyse from "@/components/ShowAnalyse";
 import QuestionForm from "@/components/QuestionForm";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { debounce } from "lodash";
 
 export type QuestionType = "translation" | "response";
-
 
 export default function QuestionGenerator() {
   // State declarations
@@ -30,12 +47,16 @@ export default function QuestionGenerator() {
     difficulty: "EASY",
     userLanguage: "Turkish",
   });
-  const [title, setTitle] = useState<string>("In this context, your task is to translate the text created in your own language into English");
+  const [title, setTitle] = useState<string>(
+    "In this context, your task is to translate the text created in your own language into English"
+  );
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [showText, setShowText] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
   const voiceRecorderRef = useRef<VoiceRecorderRef>(null);
-  const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
+  const [transcriptionError, setTranscriptionError] = useState<string | null>(
+    null
+  );
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isTranscribed, setIsTranscribed] = useState(false);
   const [tips, setTips] = useState<string | null>(null);
@@ -66,21 +87,21 @@ export default function QuestionGenerator() {
 
   const handleTranscript = useCallback(async () => {
     if (!audioBlob) return;
-    
+
     setIsTranscribing(true);
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.wav');
-      
-      const response = await fetch('/api/voice/stt', {
-        method: 'POST',
+      formData.append("audio", audioBlob, "recording.wav");
+
+      const response = await fetch("/api/voice/stt", {
+        method: "POST",
         body: formData,
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.error || 'Transcription failed');
+        throw new Error(result.error || "Transcription failed");
       }
 
       if (result.succeded) {
@@ -95,11 +116,13 @@ export default function QuestionGenerator() {
         setLastAnalyzedKey(null);
         setAnalysisResult(null);
       } else {
-        setTranscriptionError(result.message || 'Transcription failed');
+        setTranscriptionError(result.message || "Transcription failed");
       }
     } catch (error: any) {
-      console.error('Error transcribing audio:', error);
-      setTranscriptionError(error.message || 'Ses dönüştürme sırasında bir hata oluştu');
+      console.error("Error transcribing audio:", error);
+      setTranscriptionError(
+        error.message || "Ses dönüştürme sırasında bir hata oluştu"
+      );
     } finally {
       setIsTranscribing(false);
     }
@@ -125,7 +148,7 @@ export default function QuestionGenerator() {
 
   const handleAnalyze = useCallback(async () => {
     if (!textareaRef.current) return;
-    
+
     const userAnswer = textareaRef.current.value;
     if (!userAnswer) {
       toast.error("Please enter your answer before analyzing.");
@@ -148,12 +171,13 @@ export default function QuestionGenerator() {
         generatedQuestion: question,
         userResponse: userAnswer,
         userLevel: formData.userLevel,
-        userLanguage: formData.userLanguage
+        userLanguage: formData.userLanguage,
       };
 
-      const response = questionType === "translation" 
-        ? await analyzeQuestion(AnalyzeQuestionData)
-        : await analyzeResponse(AnalyzeQuestionData);
+      const response =
+        questionType === "translation"
+          ? await analyzeQuestion(AnalyzeQuestionData)
+          : await analyzeResponse(AnalyzeQuestionData);
 
       if (response) {
         setAnalysisResult(response);
@@ -171,55 +195,66 @@ export default function QuestionGenerator() {
     }
   }, [question, formData, lastAnalyzedKey, analysisResult, questionType]);
 
-  const handleSubmit = useCallback(async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setAudioBlob(null);
-    setTranscript("");
-    setShowText(false);
-    setIsTranscribed(false);
-    setTranscriptionError(null);
-    setLastAnalyzedKey(null);
-    setAnalysisResult(null);
+  const handleSubmit = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      setIsLoading(true);
+      setAudioBlob(null);
+      setTranscript("");
+      setShowText(false);
+      setIsTranscribed(false);
+      setTranscriptionError(null);
+      setLastAnalyzedKey(null);
+      setAnalysisResult(null);
 
-    const formDataObj = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      formDataObj.append(key, value);
-    });
+      const formDataObj = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataObj.append(key, value);
+      });
 
-    if (question) {
-      formDataObj.append("previousQuestion", question);
-    }
-    formDataObj.append("previousQuestions", JSON.stringify(previousQuestions));
-
-    try {
-      const result = questionType === "translation"
-        ? await generateQuestion(formDataObj)
-        : await generateResponseQuestion(formDataObj);
-
-      if (!result.success) {
-        console.log(result);
-        
-        toast.error(result.message || result.message?.error?.message || "An error occurred");
-        return;
+      if (question) {
+        formDataObj.append("previousQuestion", question);
       }
+      formDataObj.append(
+        "previousQuestions",
+        JSON.stringify(previousQuestions)
+      );
 
-      setQuestion(result.data);
-      setTips(result.tips);
-      
-      if (result.data) {
-        setPreviousQuestions(prev => [...prev, result.data].slice(-10)); // Keep only last 10 questions
+      try {
+        const result =
+          questionType === "translation"
+            ? await generateQuestion(formDataObj)
+            : await generateResponseQuestion(formDataObj);
+
+        if (!result.success) {
+          console.log(result);
+
+          toast.error(
+            result.message ||
+              result.message?.error?.message ||
+              "An error occurred"
+          );
+          return;
+        }
+
+        setQuestion(result.data);
+        setTips(result.tips);
+
+        if (result.data) {
+          setPreviousQuestions((prev) => [...prev, result.data].slice(-10)); // Keep only last 10 questions
+        }
+      } catch (error) {
+        console.error("Error generating question:", error);
+        toast.error("Failed to generate question");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error generating question:", error);
-      toast.error("Failed to generate question");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [formData, question, previousQuestions, questionType]);
+    },
+    [formData, question, previousQuestions, questionType]
+  );
 
   const handleChange = useCallback((name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setQuestion(null);
     setTips(null);
     setTranscript("");
@@ -230,9 +265,11 @@ export default function QuestionGenerator() {
 
   const handleQuestionTypeChange = useCallback((value: QuestionType) => {
     setQuestionType(value);
-    setTitle(value === "translation" 
-      ? "In this context, your task is to translate the text created in your own language into English" 
-      : "In this context, your task is to answer the question posed in English in English");
+    setTitle(
+      value === "translation"
+        ? "In this context, your task is to translate the text created in your own language into English"
+        : "In this context, your task is to answer the question posed in English in English"
+    );
     setQuestion(null);
     setTips(null);
     setTranscript("");
@@ -249,8 +286,8 @@ export default function QuestionGenerator() {
           duration: 6000,
           action: {
             label: "Reset Now",
-            onClick: handleReset
-          }
+            onClick: handleReset,
+          },
         }
       );
     }
@@ -264,13 +301,13 @@ export default function QuestionGenerator() {
 
   return (
     <div className="text-white">
-      <ShowAnalyse 
-        isOpen={isAnalysisDrawerOpen} 
-        onClose={() => setIsAnalysisDrawerOpen(false)} 
-        analysisResult={analysisResult} 
+      <ShowAnalyse
+        isOpen={isAnalysisDrawerOpen}
+        onClose={() => setIsAnalysisDrawerOpen(false)}
+        analysisResult={analysisResult}
       />
 
-      <div className="container mx-auto py-10 px-4">
+      <div className="w-full">
         <Card className="text-3xl font-bold mb-10 text-center">
           <p className="text-2xl p-4">{title}</p>
         </Card>
@@ -280,16 +317,19 @@ export default function QuestionGenerator() {
           <Card className="bg-zinc-900 border-zinc-800 text-white h-fit">
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
-                <CardTitle className="text-xl">Set Question Parameters</CardTitle>
+                <CardTitle className="text-xl">
+                  Set Question Parameters
+                </CardTitle>
                 <p className="text-sm text-zinc-400 mt-1">
-                  Fill in the fields below to generate a question suitable for your level and needs
+                  Fill in the fields below to generate a question suitable for
+                  your level and needs
                 </p>
               </div>
               <div className="flex space-x-2">
                 {previousQuestions.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white"
                     onClick={handleReset}
                     title="Reset question history"
@@ -305,29 +345,31 @@ export default function QuestionGenerator() {
                 <label className="block text-sm font-medium text-zinc-400 mb-2">
                   Question Type
                 </label>
-                <Select 
-                  value={questionType} 
+                <Select
+                  value={questionType}
                   onValueChange={handleQuestionTypeChange}
                 >
                   <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                     <SelectValue placeholder="Select question type" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                    <SelectItem value="translation">Translation Question</SelectItem>
+                    <SelectItem value="translation">
+                      Translation Question
+                    </SelectItem>
                     <SelectItem value="response">Response Question</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-zinc-500 mt-1">
-                  {questionType === "translation" 
-                    ? "Generate questions for translation practice" 
+                  {questionType === "translation"
+                    ? "Generate questions for translation practice"
                     : "Generate questions for answering practice"}
                 </p>
               </div>
-              <QuestionForm 
-                formData={formData} 
-                handleChange={handleChange} 
-                handleSubmit={handleSubmit} 
-                isLoading={isLoading} 
+              <QuestionForm
+                formData={formData}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                isLoading={isLoading}
               />
             </CardContent>
           </Card>
@@ -337,15 +379,15 @@ export default function QuestionGenerator() {
             <CardHeader>
               {question && (
                 <div className="flex flex-wrap gap-2">
-                  <VoiceRecorder 
-                    onRecordingComplete={handleRecordingComplete} 
-                    ref={voiceRecorderRef} 
-                    key={audioBlob ? "recording" : "empty"} 
+                  <VoiceRecorder
+                    onRecordingComplete={handleRecordingComplete}
+                    ref={voiceRecorderRef}
+                    key={audioBlob ? "recording" : "empty"}
                   />
                   {audioBlob && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none"
                       onClick={handleTranscript}
                       disabled={isTranscribing || isTranscribed}
@@ -362,9 +404,9 @@ export default function QuestionGenerator() {
                       )}
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
                     onClick={() => setShowText(!showText)}
                   >
@@ -372,20 +414,22 @@ export default function QuestionGenerator() {
                     <span className="text-xs">Reply with Text</span>
                   </Button>
                   {tips && (
-                    <TipsDrawer 
-                      markdownContent={tips} 
-                      title={questionType === "translation" 
-                        ? "✨💡🌟 TRANSLATION TIPS ✨💡🌟" 
-                        : "✨💡🌟 ANSWER TIPS ✨💡🌟"} 
+                    <TipsDrawer
+                      markdownContent={tips}
+                      title={
+                        questionType === "translation"
+                          ? "✨💡🌟 TRANSLATION TIPS ✨💡🌟"
+                          : "✨💡🌟 ANSWER TIPS ✨💡🌟"
+                      }
                       triggerButton={
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
                         >
                           Show Tips
                         </Button>
-                      } 
+                      }
                     />
                   )}
                 </div>
@@ -394,17 +438,17 @@ export default function QuestionGenerator() {
             <CardContent>
               {question ? (
                 <div className="bg-white rounded-md p-2 text-black min-h-[100px] max-h-[600px] overflow-y-auto">
-                  <DisplayQuestion 
-                    htmlContent={question} 
-                    questionType={questionType} 
-                    userlang={formData.userLanguage} 
+                  <DisplayQuestion
+                    htmlContent={question}
+                    questionType={questionType}
+                    userlang={formData.userLanguage}
                   />
                 </div>
               ) : (
                 <div className="bg-zinc-800 rounded-md p-2 text-zinc-400 min-h-[400px] flex items-center justify-center">
                   <p className="text-center">
-                    {questionType === "translation" 
-                      ? "Your translation question will appear here" 
+                    {questionType === "translation"
+                      ? "Your translation question will appear here"
                       : "Your question to answer will appear here"}
                   </p>
                 </div>
@@ -414,10 +458,12 @@ export default function QuestionGenerator() {
             {showText && (
               <CardFooter>
                 <div className="grid w-full gap-4">
-                  <Textarea 
-                    placeholder={questionType === "translation" 
-                      ? "Type your translation here." 
-                      : "Type your answer here."}
+                  <Textarea
+                    placeholder={
+                      questionType === "translation"
+                        ? "Type your translation here."
+                        : "Type your answer here."
+                    }
                     defaultValue={transcript}
                     onChange={handleTextareaChange}
                     ref={textareaRef}
@@ -426,10 +472,12 @@ export default function QuestionGenerator() {
                   {transcriptionError && (
                     <p className="text-red-500 text-sm">{transcriptionError}</p>
                   )}
-                  <Button 
-                    onClick={handleAnalyze} 
+                  <Button
+                    onClick={handleAnalyze}
                     disabled={analysing}
-                    className={lastAnalyzedKey ? "bg-green-600 hover:bg-green-700" : ""}
+                    className={
+                      lastAnalyzedKey ? "bg-green-600 hover:bg-green-700" : ""
+                    }
                   >
                     {analysing ? (
                       <>

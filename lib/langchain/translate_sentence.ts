@@ -2,6 +2,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createLLM } from "./llm";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { z } from "zod";
+import { TranslateSentencesPrompt_Constant_2 } from "../prompts";
 const llm = createLLM(
   process.env.NEXT_DEFAULT_MODEL,
   process.env.NEXT_MODEL_BASEURL,
@@ -18,20 +19,7 @@ const parser = StructuredOutputParser.fromZodSchema(translate);
 const formatInstructions = parser.getFormatInstructions();
 
 const prompt = ChatPromptTemplate.fromMessages([
-  [
-    "system",
-    `
-You are a translator who specializes in translating the given sentence into English or {userlang}, word for word.
-For each word in the original sentence, provide possible English or {userlang} translations.
-
-IMPORTANT The response must be in the following format:
-{format}
-
-IMPORTANT If the sentence is already in English, translate it into the {userlang} in the same way 
-
-Here is the sentence to translate: {sentence}
-  `,
-  ],
+  ["system", TranslateSentencesPrompt_Constant_2],
 ]);
 
 const chain = prompt.pipe(llm).pipe(parser);

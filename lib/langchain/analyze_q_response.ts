@@ -1,6 +1,7 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Annotation, StateGraph } from "@langchain/langgraph";
 import { createLLM } from "./llm";
+import { ResponseAnalysisPrompt_Constant } from "../prompts";
 
 const llm = createLLM(
   process.env.NEXT_DEFAULT_MODEL,
@@ -21,52 +22,9 @@ const ResponseAnalysisState = Annotation.Root({
   ImprovedResponse: Annotation<string>,
 });
 
-const ResponseAnalysisPrompt = ChatPromptTemplate.fromTemplate(`
-  Analyze the following user's response to an English question.
-
-  ENGLISH QUESTION: {GeneratedQuestion}
-  USER LEVEL: {UserLevel}
-  TARGET GRAMMAR CONCEPT: {TargetGrammarTopic}
-  USER'S RESPONSE: {UserResponse}
-
-  Important: The user is learning English and was asked to provide a response to the question.
-
-  Please evaluate the response based on the following criteria:
-  
-  1. Grammar:
-     - Identify any grammatical errors in the response
-     - Provide specific feedback on grammar usage
-     - Pay special attention to the use of {TargetGrammarTopic} in their response
-  
-  2. Vocabulary:
-     - Evaluate the vocabulary used in the response
-     - Comment on appropriateness and accuracy of word choice
-     - Suggest alternative or additional vocabulary they could have used
-  
-  3. Content:
-     - Determine if the user responded appropriately to the question
-     - Assess if the response is complete and addresses all aspects of the question
-     - Comment on the organization and clarity of their response
-  
-  VERY IMPORTANT: Provide ALL your feedback in {UserLanguage}, not in English!
-  
-  Provide your analysis in the following format:
-  
-  GRAMMAR FEEDBACK: [Detailed feedback on grammar usage in {UserLanguage}]
-  
-  VOCABULARY FEEDBACK: [Feedback on vocabulary usage in {UserLanguage}]
-  
-  CONTENT FEEDBACK: [Feedback on how well the user responded to the question, in {UserLanguage}]
-  
-  CORRECTED RESPONSE: [If the user has any answer, correct and improve it grammatically, if not, show how to give an appropriate answer to the question. Just send the answer and make sure it is in “English”]
-  
-  IMPROVED RESPONSE: [An enhanced version of the response showing better vocabulary and structure while maintaining the user's original meaning]
-  
-  !IMPORTANT: In the "CORRECTED RESPONSE" and "IMPROVED RESPONSE" sections, you should only give the corrected/improved text, you should not add comments etc.
-  !IMPORTANT: Use "you" when you answer. Do not address as "user"
-
-  Ensure your analysis is appropriate for a {UserLevel} CEFR level language learner. Be encouraging while providing constructive feedback.
-`);
+const ResponseAnalysisPrompt = ChatPromptTemplate.fromTemplate(
+  ResponseAnalysisPrompt_Constant
+);
 
 const responseAnalysisChain = ResponseAnalysisPrompt.pipe(llm);
 

@@ -24,7 +24,9 @@ export const metadata: Metadata = {
 
 const page = () => {
   return (
-    <QuestionGenerator/>
+    <div className='mx-5' >
+      <QuestionGenerator/>
+    </div>
   )
 }
 
