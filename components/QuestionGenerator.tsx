@@ -19,7 +19,6 @@ import {
 } from "@/app/action";
 import VoiceRecorder, { VoiceRecorderRef } from "@/components/voiceRecorder";
 import { toast } from "sonner";
-import TipsDrawer from "@/components/TipsDrawer";
 import { DisplayQuestion } from "@/components/DisplayQuestion";
 import ShowAnalyse from "@/components/ShowAnalyse";
 import QuestionForm from "@/components/QuestionForm";
@@ -31,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { debounce } from "lodash";
+import TipsShower from "./TipsShower";
 
 export type QuestionType = "translation" | "response";
 
@@ -413,25 +413,6 @@ export default function QuestionGenerator() {
                     <Text className="h-3 w-3 mr-1" />
                     <span className="text-xs">Reply with Text</span>
                   </Button>
-                  {tips && (
-                    <TipsDrawer
-                      markdownContent={tips}
-                      title={
-                        questionType === "translation"
-                          ? "✨💡🌟 TRANSLATION TIPS ✨💡🌟"
-                          : "✨💡🌟 ANSWER TIPS ✨💡🌟"
-                      }
-                      triggerButton={
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 bg-zinc-700 hover:bg-zinc-600 border-none text-white"
-                        >
-                          Show Tips
-                        </Button>
-                      }
-                    />
-                  )}
                 </div>
               )}
             </CardHeader>
@@ -491,6 +472,11 @@ export default function QuestionGenerator() {
                     )}
                   </Button>
                 </div>
+              </CardFooter>
+            )}
+            {question && (
+              <CardFooter>
+                <TipsShower tips={tips}></TipsShower>
               </CardFooter>
             )}
           </Card>

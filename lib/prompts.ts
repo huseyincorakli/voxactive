@@ -23,29 +23,24 @@ Response format: Only return the generated question. Do not include any extra te
 `;
 
 export const TranslationTipsPrompt_Constant: string = `
-You are a skilled English teacher. For the following question in {UserLanguage}:
+You are a skilled English-{UserLanguage} interpreter. For the following question in {UserLanguage}:
+“{GeneratedQuestion}”
 
-  “{GeneratedQuestion}”
-
-Create useful translation tips in {UserLanguage} to guide the user in translating this question into English on their own.
+Create 3 short and clear translation tips in {UserLanguage} to help the user translate this sentence into English by themselves.
 
 The question uses the grammar concept {TargetGrammerTopic} and is tailored for {UserLevel}, at a CEFR {UserLevel} level.
 
-1. DO NOT provide the full translated sentence – encourage the user to solve it themselves.
-2. Offer a brief reminder of the relevant grammar rule for {TargetGrammerTopic} that applies to the question.
-3. Provide clear, concise guidance to help the user translate, not exceeding 5 tips.
-4. Focus on explaining **how** to translate, not **what** to translate.
-5. Write all tips in {UserLanguage}.
-6. Keep tips short but educational and easy to understand.
-7. Emphasize analyzing sentence structure (subject-predicate-object) in the translation process.
-8. Pay attention to verb tenses and how they should change in the translation.
-9. Highlight the use of auxiliary verbs, prepositions, and articles (the, a, an) that may be omitted or misused in translation.
-10. Use Markdown format: 
-   - Use “###” for headings.
-   - Use “-” for articles or bullet points.
-11. Help the user recognize idiomatic expressions that may arise during translation.
-12. Provide only tips, do not add any extra information or details.
-
+-DO NOT provide the full translation.
+-Each tip should be one concise sentence.
+-Focus on how to translate (key grammar points, sentence structure, verb tense, etc.).
+-Write all tips in {UserLanguage}.
+-Avoid extra explanations; keep tips easy to understand
+-If you get text from the question, show it in ""
+-DO NOT assume the first noun in {UserLanguage} is the subject in English — explain structure based on meaning, not position.
+-Use Markdown format with “#” for each tip.
+-Emphasize important points like subject-verb order, auxiliary verbs, or articles if relevant..
+-Pay close attention to structures like "there is/are" where the subject may not match {UserLanguage} word order.
+-Do not add anything except these 3 tips.
 `;
 
 export const ResponseAnalysisPrompt_Constant: string = `Analyze the following user's response to an English question.
@@ -161,7 +156,7 @@ export const ResponseQuestionTipsPrompt_Constant: string = `
   
   "{GeneratedQuestion}"
   
-  Create useful tips in {UserLanguage} to guide the user on how to properly answer this question in English.
+  Create 4 short and clear tips in {UserLanguage} to guide the user on how to properly answer this question in English.
   
   The question uses the grammar concept {TargetGrammarTopic} and is designed for {UserLevel} CEFR level.
   
@@ -172,9 +167,8 @@ export const ResponseQuestionTipsPrompt_Constant: string = `
   5. Suggest vocabulary that might be useful (3-5 relevant words/phrases)
   6. Mention any common mistakes to avoid when answering this type of question
   7. Write everything in {UserLanguage}
-  8. Keep explanations short but educational
-  9. Use Markdown format (for headings: "###", for bullet points: "-")
-  10. Just give tips, don't add anything else
+  9. Use Markdown format with “#” for each tip.
+  10. Do not add anything except these 3 tips.
 `;
 
 export const TranslateSentencesPrompt_Constant: string = `You are a professional translator specializing in translating complete sentences between English and {userlang}.
