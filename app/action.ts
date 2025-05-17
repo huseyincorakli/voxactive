@@ -7,6 +7,7 @@ import { createResponseQuestionGraph } from "@/lib/langchain/create_response_que
 import { createQuestionGraph } from "@/lib/langchain/generate_question";
 import { TalkAIApp } from "@/lib/langchain/talk_ai";
 import { cookies } from "next/headers";
+import { YoutubeTranscript } from "youtube-transcript";
 
 interface TalkAIParams {
   UserLevel: string;
@@ -328,5 +329,19 @@ export async function isBlocked() {
     return await checkBlocked(user.cookieValue.value);
   } else {
     return false;
+  }
+}
+
+export async function getTranscriptYoutube(videoId: string) {
+  try {
+    const response = await YoutubeTranscript.fetchTranscript(videoId, {
+      lang: "en",
+    });
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Transcript not found",
+    };
   }
 }

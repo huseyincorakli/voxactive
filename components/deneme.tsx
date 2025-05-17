@@ -1,20 +1,28 @@
-// import { Usage } from "@/lib/db/db";
+"use client";
+import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
+import VoiceRecorder2 from "./deneme2";
 
-// interface TestProps {
-//   usages: Usage[];
-// }
+// Client component
+export function YouTubePlayer() {
+  const videoId = "eIho2S0ZahI";
+  const { playerRef, currentTime, currentLine, accumulatedText, isReady } =
+    useYoutubeTranscript(videoId);
 
-// export function Test({ usages }: TestProps) {
-//   return (
-//     <div>
-//       <h1>Usages List</h1>
-//       <ul>
-//         {usages.map((usage) => (
-//           <li key={usage._id}>
-//             {usage.userId} - {usage.action} - {new Date(usage.timestamp).toLocaleString()}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
+  return (
+    <div>
+      <div id="yt-player"></div>
+
+      {isReady ? (
+        <>
+          <p>⏱ Şu anki zaman: {currentTime.toFixed(2)} saniye</p>
+          <p>💬 Şu anki altyazı: {currentLine}</p>
+          <p>📜 Şu ana kadar birikmiş metin: {accumulatedText}</p>
+        </>
+      ) : (
+        <p>Video ve altyazı yükleniyor, lütfen bekleyin...</p>
+      )}
+
+      <VoiceRecorder2 />
+    </div>
+  );
+}
