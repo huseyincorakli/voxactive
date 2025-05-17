@@ -1,9 +1,9 @@
-import { YouTubePlayer } from "@/components/deneme";
+import { ShadowingTechnique } from "@/components/deneme";
 
 const page = () => {
   return (
     <div className="mx-5">
-      <YouTubePlayer />
+      <ShadowingTechnique />
     </div>
   );
 };

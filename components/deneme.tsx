@@ -1,28 +1,51 @@
 "use client";
-import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
-import VoiceRecorder2 from "./deneme2";
 
-// Client component
-export function YouTubePlayer() {
-  const videoId = "eIho2S0ZahI";
-  const { playerRef, currentTime, currentLine, accumulatedText, isReady } =
-    useYoutubeTranscript(videoId);
+import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
+
+export function ShadowingTechnique() {
+  const videoId = "aImrjNPrh30";
+  const {
+    handlePlay,
+    handlePause,
+    currentTime,
+    currentLine,
+    lastSentence,
+    isReady,
+    isPlaying,
+  } = useYoutubeTranscript(videoId, 0, {
+    minSentenceLength: 1, // Minimum word count for pausing
+  });
 
   return (
-    <div>
-      <div id="yt-player"></div>
-
+    <div className="shadowing-container">
+      <div id="yt-player" className="video-container"></div>
       {isReady ? (
-        <>
-          <p>⏱ Şu anki zaman: {currentTime.toFixed(2)} saniye</p>
-          <p>💬 Şu anki altyazı: {currentLine}</p>
-          <p>📜 Şu ana kadar birikmiş metin: {accumulatedText}</p>
-        </>
+        <div className="transcript-container">
+          <div className="controls">
+            <p>Status: {isPlaying ? "Playing" : "Paused"}</p>
+            <p>Current Time: {currentTime.toFixed(3)}s</p>
+            <div className="control-buttons">
+              <button onClick={handlePlay} disabled={isPlaying}>
+                Play
+              </button>
+              <button onClick={handlePause} disabled={!isPlaying}>
+                Pause
+              </button>
+            </div>
+          </div>
+          <div className="transcript-content">
+            <p className="current-line">Current Line: {currentLine}</p>
+            {!isPlaying && lastSentence && (
+              <div className="sentence-box">
+                <h3>Repeat This Sentence:</h3>
+                <p className="last-sentence">{lastSentence}</p>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
-        <p>Video ve altyazı yükleniyor, lütfen bekleyin...</p>
+        <p>Loading...</p>
       )}
-
-      <VoiceRecorder2 />
     </div>
   );
 }
