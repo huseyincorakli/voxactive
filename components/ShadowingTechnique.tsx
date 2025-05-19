@@ -38,7 +38,7 @@ export function ShadowingTechnique() {
           {/* YouTube Player */}
           <div
             id="yt-player"
-            className="w-full aspect-video bg-zinc-800  "
+            className="w-full aspect-video bg-zinc-800 pointer-events-none"
           ></div>
 
           {/* Current Line Display - Animated with gradient border */}
