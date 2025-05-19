@@ -173,15 +173,25 @@ export function useYoutubeTranscript(
           disablekb: 1,
           rel: 0,
           fs: 0,
+          enablejsapi: 1,
+          cc_load_policy: 3,
           iv_load_policy: 3,
-          cc_load_policy: 0,
         },
         events: {
-          onReady: () => setPlayerReady(true),
-          onStateChange: (event: any) => {
+          onReady: (event) => {
+            if (playerRef.current) {
+              playerRef.current.setOption("captions", "track", {});
+              playerRef.current.unloadModule("captions");
+            }
+            setPlayerReady(true);
+          },
+          onStateChange: (event) => {
             const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
             setIsPlaying(newIsPlaying);
             if (newIsPlaying) {
+              if (playerRef.current) {
+                playerRef.current.setOption("captions", "track", {});
+              }
               manuallyPlayed.current = true;
               setTimeout(() => {
                 manuallyPlayed.current = false;
