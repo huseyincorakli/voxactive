@@ -171,8 +171,9 @@ export function useYoutubeTranscript(
           controls: 0,
           modestbranding: 1,
           disablekb: 1,
-          showinfo: 0,
           rel: 0,
+          fs: 0,
+          iv_load_policy: 3,
           cc_load_policy: 0,
         },
         events: {
