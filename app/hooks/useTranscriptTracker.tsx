@@ -173,6 +173,7 @@ export function useYoutubeTranscript(
           disablekb: 1,
           showinfo: 0,
           rel: 0,
+          cc_load_policy: 0,
         },
         events: {
           onReady: () => setPlayerReady(true),
