@@ -1,4 +1,4 @@
-import { ShadowingTechnique } from "@/components/deneme";
+import { ShadowingTechnique } from "@/components/ShadowingTechnique";
 
 const page = () => {
   return (

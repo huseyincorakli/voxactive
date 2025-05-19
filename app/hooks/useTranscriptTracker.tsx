@@ -18,7 +18,6 @@ export function useYoutubeTranscript(
   delay: number,
   options: TranscriptOptions = {}
 ) {
-  // Memoized helper functions inside the hook
   const decodeHtml = useCallback((html: string) => {
     if (!html) return "";
     const txt = document.createElement("textarea");
@@ -35,7 +34,6 @@ export function useYoutubeTranscript(
     );
   }, []);
 
-  // Memoized patterns
   const creditPatterns = useMemo(
     () => [
       /(^|\s)(transcriber|reviewer|translator):?\s*[\w\s.-]+/gi,
@@ -58,22 +56,33 @@ export function useYoutubeTranscript(
   const getLastFullSentence = useCallback(
     (text: string): string => {
       if (!text) return "";
-
       let cleanedText = text;
       creditPatterns.forEach((pattern) => {
         cleanedText = cleanedText.replace(pattern, "").trim();
         cleanedText = cleanedText.replace(/(^|\s):\s*/, "").trim();
       });
-
-      const sentenceRegex = /([^.!?]*[.!?]["']?(?:\s|$))/g;
-      const sentences: string[] = [];
-      let match;
-
-      while ((match = sentenceRegex.exec(cleanedText)) !== null) {
-        const sentence = match[0].trim();
-        if (sentence) sentences.push(sentence);
+      const sentences = [];
+      const segments = cleanedText.split(/([.!?]["']?\s+|[.!?]["']?$)/);
+      let currentSentence = "";
+      for (let i = 0; i < segments.length; i += 2) {
+        if (i + 1 < segments.length) {
+          currentSentence += segments[i] + segments[i + 1];
+          const quoteCount = (currentSentence.match(/"/g) || []).length;
+          const isInQuotes = quoteCount % 2 !== 0;
+          if (!isInQuotes || segments[i + 1].trim().endsWith('"')) {
+            sentences.push(currentSentence.trim());
+            currentSentence = "";
+          }
+        } else if (segments[i]) {
+          currentSentence += segments[i];
+          if (currentSentence.trim()) {
+            sentences.push(currentSentence.trim());
+          }
+        }
       }
-
+      if (currentSentence.trim()) {
+        sentences.push(currentSentence.trim());
+      }
       return sentences.length > 0 ? sentences[sentences.length - 1] : "";
     },
     [creditPatterns]
@@ -82,12 +91,10 @@ export function useYoutubeTranscript(
   const cleanTranscriptData = useCallback(
     (transcript: any[]) => {
       if (!transcript?.length) return [];
-
       const cleanedTranscript = transcript.map((item) => ({
         ...item,
         text: decodeHtml(item.text),
       }));
-
       const segmentsToCheck = Math.min(10, cleanedTranscript.length);
       for (let i = 0; i < segmentsToCheck; i++) {
         let text = cleanedTranscript[i].text.trim();
@@ -97,7 +104,6 @@ export function useYoutubeTranscript(
         text = text.replace(/^[:,-]\s*/, "").trim();
         cleanedTranscript[i].text = text;
       }
-
       return cleanedTranscript.filter(
         (segment) => segment.text.trim().length > 0
       );
@@ -105,7 +111,6 @@ export function useYoutubeTranscript(
     [decodeHtml, namePatterns]
   );
 
-  // Rest of the hook implementation remains the same...
   const playerRef = useRef<any>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [transcript, setTranscript] = useState<any[]>([]);
@@ -114,6 +119,11 @@ export function useYoutubeTranscript(
   const [playerReady, setPlayerReady] = useState(false);
   const [transcriptReady, setTranscriptReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [repeatMode, setRepeatMode] = useState(false); // 👈 yeni state
+  const [lastSentenceTimestamp, setLastSentenceTimestamp] = useState<{
+    start: number;
+    end: number;
+  } | null>(null);
 
   const minSentenceLength = options.minSentenceLength || 1;
   const sentenceHistory = useRef<string[]>([]);
@@ -122,7 +132,6 @@ export function useYoutubeTranscript(
   const lastPausedPosition = useRef<number>(-1);
   const manuallyPlayed = useRef<boolean>(false);
 
-  // Memoized transcript processor
   const processTranscript = useCallback(
     (data: any[]) => {
       const cleaned = cleanTranscriptData(data);
@@ -131,13 +140,17 @@ export function useYoutubeTranscript(
         originalIndex: index,
         text: decodeHtml(item.text),
         wordCount: getWordCount(item.text),
-        isSentenceEnd: /[.!?]\s*$/.test(item.text),
+        isSentenceEnd: ((text) => {
+          const quoteCount = (text.match(/"/g) || []).length;
+          if (/[.!?]$/.test(text) && quoteCount % 2 === 0) return true;
+          if (/[.!?]"$/.test(text)) return true;
+          return false;
+        })(item.text),
       }));
     },
     [cleanTranscriptData, decodeHtml, getWordCount]
   );
 
-  // Load transcript
   useEffect(() => {
     getTranscriptYoutube(videoId)
       .then((response) => {
@@ -147,7 +160,6 @@ export function useYoutubeTranscript(
       .catch(console.error);
   }, [videoId, processTranscript]);
 
-  // Initialize YouTube player
   useEffect(() => {
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
@@ -160,14 +172,14 @@ export function useYoutubeTranscript(
           modestbranding: 1,
           disablekb: 1,
           showinfo: 0,
+          rel: 0,
         },
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event: any) => {
             const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
             setIsPlaying(newIsPlaying);
-
-            if (newIsPlaying && event.data === window.YT.PlayerState.PLAYING) {
+            if (newIsPlaying) {
               manuallyPlayed.current = true;
               setTimeout(() => {
                 manuallyPlayed.current = false;
@@ -187,46 +199,52 @@ export function useYoutubeTranscript(
     document.body.appendChild(tag);
     return () => {
       window.onYouTubeIframeAPIReady = null;
-      document.body.removeChild(tag);
+      if (tag.parentNode) document.body.removeChild(tag);
     };
   }, [videoId]);
 
-  // Check readiness
   useEffect(() => {
     if (playerReady && transcriptReady) setIsReady(true);
   }, [playerReady, transcriptReady]);
 
-  // Tracking effect with optimized processing
   useEffect(() => {
     if (!isReady || !transcript.length) return;
 
-    const interval = setInterval(() => {
-      if (!playerRef.current?.getCurrentTime) return;
+    let rafId: number;
+
+    const tick = () => {
+      if (!playerRef.current?.getCurrentTime) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
 
       const currentTime = playerRef.current.getCurrentTime();
       setCurrentTime(currentTime);
 
-      // Find active segments with early exit
-      let currentText = "";
-      let currentSegmentWordCount = 0;
-      let currentSegmentIndex = -1;
+      // 🛑 repeat mode kontrolü
+      if (
+        repeatMode &&
+        lastSentenceTimestamp &&
+        currentTime >= lastSentenceTimestamp.end - 0.1
+      ) {
+        playerRef.current.pauseVideo();
+        setRepeatMode(false); // tekrar bittiğinde repeat moddan çık
+        return;
+      }
 
+      let currentSegmentIndex = -1;
       for (let i = 0; i < transcript.length; i++) {
         const seg = transcript[i];
         if (
           currentTime >= seg.offset &&
           currentTime < seg.offset + seg.duration
         ) {
-          currentText = seg.text;
-          currentSegmentWordCount = seg.wordCount;
           currentSegmentIndex = i;
+          setCurrentLine(seg.text);
           break;
         }
       }
 
-      setCurrentLine(currentText);
-
-      // Build accumulated text only when needed
       if (
         currentSegmentIndex >= 0 &&
         currentSegmentIndex > lastProcessedIndex.current
@@ -252,28 +270,52 @@ export function useYoutubeTranscript(
         }
       }
 
-      // Check for pause points
-      transcript.forEach((seg, index) => {
+      if (currentSegmentIndex >= 0) {
+        const seg = transcript[currentSegmentIndex];
+        const nextIndex = currentSegmentIndex + 1;
+
         if (
           seg.isSentenceEnd &&
           seg.wordCount >= minSentenceLength &&
-          currentTime >= seg.offset + seg.duration &&
-          currentTime < seg.offset + seg.duration + 0.3 &&
+          currentTime >= seg.offset + seg.duration - 0.15 &&
+          currentTime < seg.offset + seg.duration + 0.15 &&
           Math.abs(currentTime - lastPausedPosition.current) > 1.0 &&
-          index < transcript.length - 1
+          nextIndex < transcript.length &&
+          !repeatMode // ❗️repeat sırasında durdurma olmasın
         ) {
-          setTimeout(() => {
-            if (playerRef.current?.getPlayerState() === 1) {
-              playerRef.current.pauseVideo();
-              lastPausedPosition.current = currentTime;
-            }
-          }, delay);
-        }
-      });
-    }, 100);
+          playerRef.current.pauseVideo();
+          lastPausedPosition.current = currentTime;
 
-    return () => clearInterval(interval);
-  }, [isReady, transcript, delay, minSentenceLength, getLastFullSentence]);
+          let sentenceStartIndex = currentSegmentIndex;
+          for (let i = currentSegmentIndex; i >= 0; i--) {
+            if (i === 0 || transcript[i - 1].isSentenceEnd) {
+              sentenceStartIndex = i;
+              break;
+            }
+          }
+
+          setLastSentenceTimestamp({
+            start: transcript[sentenceStartIndex].offset,
+            end:
+              transcript[currentSegmentIndex].offset +
+              transcript[currentSegmentIndex].duration,
+          });
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [
+    isReady,
+    transcript,
+    delay,
+    minSentenceLength,
+    getLastFullSentence,
+    repeatMode,
+  ]);
 
   const handlePlay = useCallback(() => {
     playerRef.current?.playVideo?.();
@@ -282,6 +324,18 @@ export function useYoutubeTranscript(
   const handlePause = useCallback(() => {
     playerRef.current?.pauseVideo?.();
   }, []);
+
+  // ✅ Repeat: sadece belirtilen cümle aralığında çalış ve sonunda dur
+  const handleRepeat = useCallback(() => {
+    if (lastSentenceTimestamp && playerRef.current?.seekTo) {
+      playerRef.current.seekTo(lastSentenceTimestamp.start, true);
+      lastProcessedIndex.current = -1;
+      setRepeatMode(true); // 🔥 tekrar modunu başlat
+      setTimeout(() => {
+        playerRef.current?.playVideo?.();
+      }, 100);
+    }
+  }, [lastSentenceTimestamp]);
 
   return {
     playerRef,
@@ -293,5 +347,7 @@ export function useYoutubeTranscript(
     isPlaying,
     handlePlay,
     handlePause,
+    handleRepeat,
+    lastSentenceTimestamp,
   };
 }
