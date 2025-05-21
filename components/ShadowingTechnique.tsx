@@ -2,7 +2,7 @@
 
 import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
 import { Button } from "./ui/button";
-import { Pause, Play, RefreshCw } from "lucide-react";
+import { Pause, Play, RefreshCw, Volume2 } from "lucide-react";
 import VoiceRecorder from "./voiceRecorder";
 import AudioRecorder from "./Voice64";
 import { useState } from "react";
@@ -34,6 +34,7 @@ export function ShadowingTechnique() {
   };
 
   const handleAudioData = async (audioData: string) => {
+    setRecordedAudio(audioData);
     setIsProcessing(true);
     try {
       const response = await getPronunciationScore(lastSentence, audioData);
@@ -43,6 +44,38 @@ export function ShadowingTechnique() {
       console.error("Error getting pronunciation score:", error);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const playAudio = () => {
+    if (!recordedAudio) return;
+
+    // Extract the base64 part if it includes the data URI prefix
+    let base64Data = recordedAudio;
+    if (recordedAudio.includes("base64,")) {
+      base64Data = recordedAudio.split("base64,")[1];
+    }
+
+    try {
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+
+      // Make sure the MIME type matches your actual audio format
+      const blob = new Blob([byteArray], { type: "audio/webm" }); // or audio/mpeg, etc.
+      const audioUrl = URL.createObjectURL(blob);
+
+      const audio = new Audio(audioUrl);
+      audio.play().catch((e) => console.error("Audio playback error:", e));
+
+      return () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+    } catch (error) {
+      console.error("Error processing audio data:", error);
     }
   };
 
@@ -153,6 +186,19 @@ export function ShadowingTechnique() {
                       Continue
                     </Button>
                     <AudioRecorder onAudioData={handleAudioData} />
+                    <button
+                      onClick={() => playAudio()}
+                      className="p-0.5 sm:p-0.5 rounded-lg bg-zinc-700 transition-colors text-white-400 hover:text-emerald-400"
+                      aria-label="Play audio"
+                      title="Play"
+                    >
+                      <div className="flex flex-row justify-center items-center gap-1 ">
+                        <Volume2 size={16} className="sm:w-4 sm:h-4" />
+                        <span className="text-[13px] mt-0.5 font-bold">
+                          Listen
+                        </span>
+                      </div>
+                    </button>
                   </div>
 
                   {isProcessing && (
