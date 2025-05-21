@@ -6,19 +6,23 @@ export const getPronunciationScore = async (
   lang: string = "en"
 ): Promise<any> => {
   const apiUrl = process.env.NEXT_PUBLIC_PRONOUNCE_API_URL;
+  console.log(apiUrl);
 
   try {
-    const response = await fetch(`${apiUrl}/score`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: text,
-        base64Audio: base64Audio,
-        language: lang,
-      }),
-    });
+    const response = await fetch(
+      `http://ak8oc0kg00co8sw44kkcg80o-145132139134:5001/api/v1/score`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: text,
+          base64Audio: base64Audio,
+          language: lang,
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
