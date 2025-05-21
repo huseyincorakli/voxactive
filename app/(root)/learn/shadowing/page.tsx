@@ -1,11 +1,11 @@
 import { ShadowingTechnique } from "@/components/ShadowingTechnique";
 
-const page = () => {
+const Page = () => {
   return (
-    <div className="mx-5">
+    <div className="h-auto w-full flex">
       <ShadowingTechnique />
     </div>
   );
 };
 
-export default page;
+export default Page;

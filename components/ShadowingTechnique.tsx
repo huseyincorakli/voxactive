@@ -2,17 +2,15 @@
 
 import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
 import { Button } from "./ui/button";
-import {
-  Pause,
-  Play,
-  RefreshCw,
-  Volume2,
-  SkipForward,
-  SkipBack,
-} from "lucide-react";
+import { Pause, Play, RefreshCw } from "lucide-react";
+import VoiceRecorder from "./voiceRecorder";
+import AudioRecorder from "./Voice64";
+import { useState } from "react";
+import { getPronunciationScore } from "@/lib/pronunciation-ai/pronunciationScore";
+import { PronunciationFeedback } from "./PronunciationFeedback";
 
 export function ShadowingTechnique() {
-  const videoId = "5MgBikgcWnY";
+  const videoId = "PaErPyEnDvk";
   const {
     handlePlay,
     handlePause,
@@ -25,26 +23,48 @@ export function ShadowingTechnique() {
   } = useYoutubeTranscript(videoId, 0, {
     minSentenceLength: 1,
   });
+  const [recordedAudio, setRecordedAudio] = useState("");
+  const [scoreData, setScoreData] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const ContinueToShadowing = () => {
+    setScoreData(null);
+    handlePlay();
+  };
+
+  const handleAudioData = async (audioData: string) => {
+    setIsProcessing(true);
+    try {
+      const response = await getPronunciationScore(lastSentence, audioData);
+      console.log(response);
+      setScoreData(response);
+    } catch (error) {
+      console.error("Error getting pronunciation score:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
-    <div className="container w-full mx-auto rounded-xl overflow-hidden shadow-lg bg-zinc-900 text-white">
-      <div className="flex flex-col md:flex-row">
+    <div className="h-full w-full flex flex-col rounded-xl overflow-hidden shadow-lg bg-zinc-900 text-white">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left Column: Video and Current Line (stacked vertically) */}
         <div
-          className={`w-full md:w-3/5 ${
+          className={`w-full md:w-3/5 flex flex-col ${
             isPlaying ? "block" : "hidden"
           } md:block transition-all duration-300 ease-in-out`}
         >
           {/* YouTube Player */}
           <div
             id="yt-player"
-            className="w-full aspect-video bg-zinc-800 pointer-events-none"
+            className="w-full  bg-zinc-800 pointer-events-none"
           ></div>
 
           {/* Current Line Display - Animated with gradient border */}
           <div className="p-3 bg-zinc-800 border-t-2 border-indigo-500">
             <div className="flex items-center">
-              <div className="w-2 h-8 bg-indigo-500 rounded-full mr-3 "></div>
+              <div className="w-2 h-8 bg-indigo-500 rounded-full mr-3"></div>
               <p className="text-sm font-medium tracking-wide overflow-hidden">
                 {currentLine || "Waiting for speech..."}
               </p>
@@ -56,7 +76,7 @@ export function ShadowingTechnique() {
         <div
           className={`w-full md:w-2/5 p-5 bg-zinc-800 ${
             isPlaying ? "hidden" : "block"
-          } md:block border-l border-zinc-700 transition-all duration-300 ease-in-out`}
+          } md:block border-l border-zinc-700 transition-all duration-300 ease-in-out overflow-y-auto`}
         >
           {isReady ? (
             <div className="space-y-6">
@@ -81,7 +101,7 @@ export function ShadowingTechnique() {
               <div>
                 <Button
                   onClick={handleRepeat}
-                  disabled={isPlaying}
+                  disabled={isPlaying || isRecording}
                   variant="outline"
                   size="sm"
                   className="bg-black hover:bg-zinc-700 border-zinc-700 text-white mr-1"
@@ -89,13 +109,23 @@ export function ShadowingTechnique() {
                   <RefreshCw className="h-5 w-5 ml-0.5" />
                   Repeat
                 </Button>
+                <Button
+                  onClick={handlePlay}
+                  disabled={isPlaying || isRecording}
+                  variant="outline"
+                  size="sm"
+                  className="bg-black hover:bg-zinc-700 border-zinc-700 text-white mr-1"
+                >
+                  <Play className="h-5 w-5 ml-0.5" />
+                  Play
+                </Button>
 
                 <Button
                   variant="outline"
                   size="sm"
                   className="bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-white"
                   onClick={handlePause}
-                  disabled={!isPlaying}
+                  disabled={!isPlaying || isRecording}
                 >
                   <Pause className="h-4 w-4" />
                   Pause
@@ -115,13 +145,24 @@ export function ShadowingTechnique() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handlePlay}
+                      onClick={ContinueToShadowing}
                       className="text-indigo-400 hover:text-indigo-300 hover:bg-zinc-800"
+                      disabled={isRecording || isProcessing}
                     >
                       <Play className="h-3 w-3 mr-1" />
                       Continue
                     </Button>
+                    <AudioRecorder onAudioData={handleAudioData} />
                   </div>
+
+                  {isProcessing && (
+                    <div className="mt-4 flex justify-center">
+                      <div className="w-8 h-8 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                      <span className="ml-2 text-gray-300">
+                        Analyzing pronunciation...
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -133,6 +174,13 @@ export function ShadowingTechnique() {
           )}
         </div>
       </div>
+
+      {/* Pronunciation Feedback Section - Below both columns */}
+      {scoreData && !isPlaying && (
+        <div className="w-full p-2 bg-zinc-800 border-t border-zinc-700">
+          <PronunciationFeedback scoreData={scoreData} />
+        </div>
+      )}
     </div>
   );
 }
