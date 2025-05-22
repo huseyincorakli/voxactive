@@ -12,7 +12,7 @@ function toSlug(title: string) {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: any;
 }): Promise<Metadata> {
   params = await params;
 
