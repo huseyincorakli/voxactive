@@ -15,6 +15,8 @@ import AudioRecorder from "./Voice64";
 import { useState } from "react";
 import { getPronunciationScore } from "@/lib/pronunciation-ai/pronunciationScore";
 import { PronunciationFeedback } from "./PronunciationFeedback";
+import { DisplayQuestion } from "./DisplayQuestion";
+import { DisplaySentence } from "./DisplaySentence";
 
 export function ShadowingTechnique({ videoId }: { videoId: string }) {
   const {
@@ -254,53 +256,64 @@ export function ShadowingTechnique({ videoId }: { videoId: string }) {
               </div>
 
               {/* Repeat Sentence Section */}
-              {!isPlaying && lastSentence && (
-                <div className="bg-zinc-900 rounded-lg p-4 border-l-4 border-indigo-500">
-                  <h3 className="text-sm font-bold mb-3 text-gray-300 uppercase tracking-wider">
-                    Shadow This Phrase
-                  </h3>
-                  <p className="text-lg text-white font-medium">
-                    "{lastSentence}"
-                  </p>
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={ContinueToShadowing}
-                      className="text-indigo-400 hover:text-indigo-300 hover:bg-zinc-800"
-                      disabled={isRecording || isProcessing}
-                    >
-                      <Play className="h-3 w-3 mr-1" />
-                      Continue
-                    </Button>
-                    <AudioRecorder onAudioData={handleAudioData} />
-                    {recordedAudio && (
+              {!isPlaying &&
+                lastSentence.replace(/\([^)]*\)|\[[^\]]*\]/g, "").trim() && (
+                  <div className="bg-zinc-900 rounded-lg p-4 border-l-4 border-indigo-500">
+                    <h3 className="text-sm font-bold mb-3 text-gray-300 uppercase tracking-wider">
+                      Shadow This Phrase
+                    </h3>
+                    <>
+                      {
+                        <DisplaySentence
+                          htmlContent={lastSentence
+                            .replace(/\([^)]*\)|\[[^\]]*\]/g, "")
+                            .trim()}
+                          userlang="tr"
+                          questionType="translation"
+                          key={"2312312"}
+                          fontSize="text-lg"
+                        />
+                      }
+                    </>
+                    <div className="mt-4 flex justify-end">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => playAudio()}
-                        className="text-indigo-400 hover:text-indigo-300"
+                        onClick={ContinueToShadowing}
+                        className="text-indigo-400 hover:text-indigo-300 hover:bg-zinc-800"
+                        disabled={isRecording || isProcessing}
                       >
-                        <div className="flex flex-row justify-center items-center gap-1">
-                          <Volume2 size={16} className="sm:w-4 sm:h-4" />
-                          <span className="text-[13px] mt-0.5 font-bold">
-                            Listen
-                          </span>
-                        </div>
+                        <Play className="h-3 w-3 mr-1" />
+                        Continue
                       </Button>
+                      <AudioRecorder onAudioData={handleAudioData} />
+                      {recordedAudio && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => playAudio()}
+                          className="text-indigo-400 hover:text-indigo-300"
+                        >
+                          <div className="flex flex-row justify-center items-center gap-1">
+                            <Volume2 size={16} className="sm:w-4 sm:h-4" />
+                            <span className="text-[13px] mt-0.5 font-bold">
+                              Listen
+                            </span>
+                          </div>
+                        </Button>
+                      )}
+                    </div>
+
+                    {isProcessing && (
+                      <div className="mt-4 flex justify-center">
+                        <div className="w-8 h-8 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-300">
+                          Analyzing pronunciation...
+                        </span>
+                      </div>
                     )}
                   </div>
-
-                  {isProcessing && (
-                    <div className="mt-4 flex justify-center">
-                      <div className="w-8 h-8 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-                      <span className="ml-2 text-gray-300">
-                        Analyzing pronunciation...
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
             </div>
           )}
         </div>
