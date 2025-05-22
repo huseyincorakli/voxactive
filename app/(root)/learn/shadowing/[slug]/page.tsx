@@ -8,7 +8,7 @@ function toSlug(title: string) {
     .replace(/[^\w-]+/g, "");
 }
 
-export default async function Page({ params }: { params: { slug: string } }) {
+export default async function Page({ params }: { params: any }) {
   const { slug } = await params;
   if (!slug) return <div>Loading...</div>;
   const video = Videos.find((v) => toSlug(v.title) === slug);
