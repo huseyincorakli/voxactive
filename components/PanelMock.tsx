@@ -1,14 +1,23 @@
-export default function PanelMock(
-  {title, innerText, imagePath, imageAlt}:
-  {title: string, innerText: string, imagePath: string, imageAlt: string}
-) {
+import Image from "next/image";
+
+export default function PanelMock({
+  title,
+  innerText,
+  imagePath,
+  imageAlt,
+}: {
+  title: string;
+  innerText: string;
+  imagePath: string;
+  imageAlt: string;
+}) {
   return (
     <div className="w-full group relative flex flex-col items-center gap-6 bg-gradient-to-b from-zinc-900/90 via-zinc-900/50 to-transparent border border-zinc-700/30 rounded-2xl p-8 shadow-xl hover:shadow-2xl max-w-6xl mx-auto hover:border-blue-500/20 transition-all duration-500 ease-in-out overflow-hidden">
       {/* Softened background elements */}
       <div className="absolute -inset-1 opacity-0 group-hover:opacity-30 transition-opacity duration-700 ease-in-out">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-blue-500/3 via-transparent to-transparent"></div>
       </div>
-      
+
       {/* Title and Description */}
       <div className="relative z-10 text-white w-full text-center space-y-4">
         <div className="flex justify-center items-center gap-3 mb-2">
@@ -21,11 +30,11 @@ export default function PanelMock(
           {innerText}
         </p>
       </div>
-  
+
       {/* Image with smoother transition */}
       <div className="relative z-10 w-full transition-all duration-500 ease-in-out">
         <div className="bg-gradient-to-b from-zinc-900/60 to-transparent rounded-xl overflow-hidden shadow-xl  ring-white/10 group-hover:ring-blue-500/20 transition-all duration-700 ease-in-out">
-          <img
+          <Image
             src={imagePath}
             alt={imageAlt}
             className="w-full h-auto object-contain transition-transform duration-700 ease-in-out group-hover:scale-[1.012]"
