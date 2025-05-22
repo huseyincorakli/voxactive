@@ -32,7 +32,6 @@ async function analysisQuestion(state: typeof AnswerAnalysisState.State) {
   });
 
   const content = msg.content as string;
-  console.log("Content:", content);
 
   const grammarMatch = content.match(
     /GRAMMAR FEEDBACK:([^]*?)(?=VOCABULARY FEEDBACK:|$)/s

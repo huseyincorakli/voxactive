@@ -6,8 +6,6 @@ export const getPronunciationScore = async (
   lang: string = "en"
 ): Promise<any> => {
   const apiUrl = process.env.NEXT_PUBLIC_PRONOUNCE_API_URL;
-  console.log(apiUrl);
-  //http://10.0.1.10:5001/api/v1
   try {
     const response = await fetch(`${apiUrl}/score`, {
       method: "POST",
@@ -27,7 +25,6 @@ export const getPronunciationScore = async (
 
     // JSON yanıtı al
     const data = await response.json();
-    console.log(data);
 
     return data;
 

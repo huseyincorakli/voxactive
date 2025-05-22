@@ -64,9 +64,7 @@ export function setIpCookieIfChanged(
         sameSite: "strict",
       });
     } else {
-      console.log("IP aynı, cookie güncellenmedi");
     }
   } else {
-    console.log("Gerçek IP belirlenemedi");
   }
 }

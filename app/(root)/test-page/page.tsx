@@ -1,17 +1,12 @@
-"use client"
+"use client";
 
-import {  isBlocked } from "@/app/action";
+import { isBlocked } from "@/app/action";
 import { useState } from "react";
 
-export default  function TestPage() {
-  
-  const getCookie =async()=>{
-  
-    const a =  await isBlocked()
-    console.log(a);
-    
-  }
-  
+export default function TestPage() {
+  const getCookie = async () => {
+    const a = await isBlocked();
+  };
 
   return (
     <div>

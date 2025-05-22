@@ -167,18 +167,12 @@ export function useYoutubeTranscript(
       setTranscriptError(null);
 
       try {
-        console.log(
-          `Loading transcript for video ${videoId}, attempt ${attempt + 1}`
-        );
-
         const response = await Promise.race([
           getTranscriptYoutube(videoId),
           new Promise(
             (_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000) // 15 saniye timeout
           ),
         ]);
-
-        console.log("Transcript response:", response);
 
         if (!response || (Array.isArray(response) && response.length === 0)) {
           throw new Error("Empty transcript received");
@@ -194,18 +188,7 @@ export function useYoutubeTranscript(
         setTranscriptReady(true);
         setTranscriptError(null);
         setRetryCount(0);
-
-        console.log(
-          "Transcript loaded successfully:",
-          processedTranscript.length,
-          "segments"
-        );
       } catch (error: any) {
-        console.error(
-          `Transcript loading failed (attempt ${attempt + 1}):`,
-          error
-        );
-
         if (attempt < maxRetries - 1) {
           setRetryCount(attempt + 1);
           setTimeout(() => {
@@ -263,7 +246,6 @@ export function useYoutubeTranscript(
           },
           events: {
             onReady: (event) => {
-              console.log("YouTube player ready");
               if (playerRef.current) {
                 playerRef.current.setOption("captions", "track", {});
                 playerRef.current.unloadModule("captions");
@@ -320,10 +302,8 @@ export function useYoutubeTranscript(
 
   // Ready state kontrolü
   useEffect(() => {
-    console.log("Ready state check:", { playerReady, transcriptReady });
     if (playerReady && transcriptReady && transcript.length > 0) {
       setIsReady(true);
-      console.log("System ready!");
     } else {
       setIsReady(false);
     }

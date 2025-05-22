@@ -6,7 +6,6 @@ export async function GET(request: Request) {
   const user = url.searchParams.get("user");
   if (!user) return NextResponse.json(true);
   const decodedUser = decodeURIComponent(user);
-  console.log("Decoded user ID:", decodedUser);
   const isBlocked = await checkBlocked(decodedUser);
   return NextResponse.json(isBlocked);
 }

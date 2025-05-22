@@ -19,8 +19,6 @@ interface TalkAIParams {
 }
 
 export async function generateQuestion(formData: any) {
-  console.log("fromdata", formData);
-
   const blocked = await isBlocked();
   if (blocked) {
     return {

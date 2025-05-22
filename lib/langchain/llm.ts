@@ -23,11 +23,9 @@ const createLLM = (
         async handleLLMEnd(output) {
           const cookieStore = cookies();
           const userIp = (await cookieStore).get("user")?.value;
-          console.log("cookie ip in llm", userIp);
           const tokensUsed = output.llmOutput?.tokenUsage.totalTokens || 0;
           if (typeof tokenUsage !== "number") tokenUsage = 0;
           tokenUsage += tokensUsed;
-          console.log(`Added ${tokensUsed} tokens. Total: ${tokenUsage}`);
           await createUsage(userIp, tokensUsed);
         },
       },

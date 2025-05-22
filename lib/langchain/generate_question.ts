@@ -32,14 +32,12 @@ const questionGeneratorChain = QuestionGeneratorPrompt.pipe(llm);
 const translationTipsChain = TranslationTipsPrompt.pipe(llm);
 
 async function generateQuestion(state: typeof QuestionGeneratorState.State) {
-  console.log(state);
 
   const previousQuestions = state.PreviousQuestions || [];
 
   const formattedPreviousQuestions = previousQuestions
     .map((q, i) => `${i + 1}. "${q}"`)
     .join("\n");
-  console.log(state);
 
   const msg = await questionGeneratorChain.invoke({
     Difficulty: state.Difficulty,

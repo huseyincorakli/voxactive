@@ -104,7 +104,6 @@ export async function createUsage(
     return { ...newUsage, _id: result.insertedId };
   } catch (error: any) {
     if (error.code === 11000) {
-      console.log(`IP ${ip} already exists`);
       return getUsage(ip) as Promise<Usage>;
     }
     console.error("Error creating/updating usage record:", error);
