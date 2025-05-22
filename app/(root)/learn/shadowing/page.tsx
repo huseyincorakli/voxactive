@@ -104,8 +104,7 @@ const Page = () => {
                     Listen
                   </h3>
                   <p className="text-gray-400 text-center leading-relaxed">
-                    Listen carefully to the original content and focus on its
-                    rhythm
+                    Listen carefully and focus on the rhythm.
                   </p>
                 </div>
               </div>
@@ -123,7 +122,7 @@ const Page = () => {
                     Repeat
                   </h3>
                   <p className="text-gray-400 text-center leading-relaxed">
-                    Immediately repeat what you hear out loud
+                    Repeat what you hear out loud
                   </p>
                 </div>
               </div>
@@ -174,7 +173,7 @@ const Page = () => {
         <div className="text-center max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-bold mb-6">
             <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
-              Video
+              Select Video from
             </span>
             <br />
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">

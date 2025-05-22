@@ -11,7 +11,7 @@ interface NavLink {
 const navLinks: NavLink[] = [
   { href: "/learn/practice", label: "Practice" },
   { href: "/learn/talk", label: "Talk2AI" },
-  { href: "/learn/shadowing", label: "Shadowing Technique" },
+  { href: "/learn/shadowing", label: "Shadowing" },
 ];
 
 const Header = () => {
@@ -24,13 +24,13 @@ const Header = () => {
 
   return (
     <header
-      className="relative flex flex-wrap sm:justify-start sm:flex-nowrap w-full text-lg py-3"
+      className="sticky top-0 z-50    sm:justify-start sm:flex-nowrap w-full text-lg py-3"
       role="banner"
     >
       <div className="w-full px-4 sm:px-6 mx-auto sm:flex sm:items-center sm:justify-between">
         <nav
           className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between 
-      rounded-xl border-zinc-800 border  shadow-sm p-3  bg-zinc-900"
+      rounded-xl border-zinc-800 border  shadow-sm p-3  backdrop-blur-sm bg-zinc-900/80"
           aria-label="Main navigation"
         >
           <div className="flex items-center justify-between">

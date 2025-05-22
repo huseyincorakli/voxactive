@@ -31,6 +31,10 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="w-full min-h-screen  text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 rounded-full blur-2xl"></div>
       {/* Hero Section */}
       <section className="relative container mx-auto px-6 py-28 md:py-36 text-center overflow-hidden">
         {/* Background elements */}
@@ -40,9 +44,12 @@ export default function Home() {
         </div>
 
         <div className="relative z-10">
-          <span className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-zinc-800/50 text-blue-400 text-sm font-medium border border-zinc-700/50 hover:border-blue-500/30 transition-colors">
-            <Sparkles className="w-4 h-4" /> AI-Powered English Learning
-          </span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 backdrop-blur-sm mb-6 group hover:from-purple-500/30 hover:to-blue-500/30 transition-all duration-300">
+            <Sparkles className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
+            <span className="text-sm text-gray-300 font-medium">
+              AI-Powered Learning
+            </span>
+          </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-tight">
             Master English <br />
