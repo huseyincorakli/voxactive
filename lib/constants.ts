@@ -196,3 +196,97 @@ export const Languages: string[] = [
   "Wu Chinese (Shanghainese)",
   "Yoruba",
 ];
+
+export type Video = {
+  id: string;
+  title: string;
+  category: string;
+  level: "Beginner" | "Intermediate" | "Advanced"; // literal union type
+};
+export const Videos: Video[] = [
+  {
+    id: "PaErPyEnDvk",
+    title: "What’s Hiding at the Most Solitary Place on Earth? The Deep Sea",
+    category: "Science",
+    level: "Intermediate",
+  },
+  {
+    id: "5iPH-br_eJQ",
+    title: "What if We Nuke a City?",
+    category: "Science",
+    level: "Intermediate",
+  },
+  {
+    id: "9P6rdqiybaw",
+    title: "Wormholes Explained – Breaking Spacetime",
+    category: "Science",
+    level: "Intermediate",
+  },
+  {
+    id: "YEaSxhcns7Y",
+    title: "Where did English come from? - Claire Bowern",
+    category: "Language",
+    level: "Advanced",
+  },
+  {
+    id: "nDZGL1xsqzs",
+    title: "Napoleonic Wars: Battle of Waterloo 1815",
+    category: "History",
+    level: "Intermediate",
+  },
+  {
+    id: "XqvALkpsfRo",
+    title: "Battle of the Somme 1916",
+    category: "History",
+    level: "Intermediate",
+  },
+
+  {
+    id: "IDj1OBG5Tpw",
+    title: "Harvard negotiator explains how to argue | Dan Shapiro",
+    category: "Psychology",
+    level: "Intermediate",
+  },
+  {
+    id: "QemWDFuU68U",
+    title: "Learning from Failure",
+    category: "Psychology",
+    level: "Beginner",
+  },
+  {
+    id: "uBbVbqRvqTM",
+    title: "The Brilliant Mind of Ada Lovelace",
+    category: "Science",
+    level: "Intermediate",
+  },
+  {
+    id: "e-or_D-qNqM",
+    title: "Don’t chase happiness. Become antifragile",
+    category: "Psychology",
+    level: "Intermediate",
+  },
+  {
+    id: "iTefkqYQz8g",
+    title: "How the body keeps the score on trauma ",
+    category: "Psychology",
+    level: "Intermediate",
+  },
+  {
+    id: "ydVFqpbIIwA",
+    title: "The First Crusade: The Bloody Road to Jerusalem 1/2",
+    category: "History",
+    level: "Intermediate",
+  },
+  {
+    id: "v_8NtmecHMA",
+    title: "The First Crusade: Jerusalem Falls 2/2",
+    category: "History",
+    level: "Intermediate",
+  },
+  {
+    id: "snn29wkKTi4",
+    title: "How the Genius of Marie Curie Killed Her",
+    category: "Science",
+    level: "Intermediate",
+  },
+];

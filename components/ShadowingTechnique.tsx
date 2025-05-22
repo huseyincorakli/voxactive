@@ -2,15 +2,21 @@
 
 import { useYoutubeTranscript } from "@/app/hooks/useTranscriptTracker";
 import { Button } from "./ui/button";
-import { Pause, Play, RefreshCw, Volume2 } from "lucide-react";
+import {
+  Pause,
+  Play,
+  RefreshCw,
+  Volume2,
+  AlertTriangle,
+  RotateCcw,
+} from "lucide-react";
 import VoiceRecorder from "./voiceRecorder";
 import AudioRecorder from "./Voice64";
 import { useState } from "react";
 import { getPronunciationScore } from "@/lib/pronunciation-ai/pronunciationScore";
 import { PronunciationFeedback } from "./PronunciationFeedback";
 
-export function ShadowingTechnique() {
-  const videoId = "PaErPyEnDvk";
+export function ShadowingTechnique({ videoId }: { videoId: string }) {
   const {
     handlePlay,
     handlePause,
@@ -20,9 +26,16 @@ export function ShadowingTechnique() {
     lastSentence,
     isReady,
     isPlaying,
+    transcriptError,
+    isTranscriptLoading,
+    retryCount,
+    retryLoadTranscript,
+    transcriptReady,
+    playerReady,
   } = useYoutubeTranscript(videoId, 0, {
     minSentenceLength: 1,
   });
+
   const [recordedAudio, setRecordedAudio] = useState("");
   const [scoreData, setScoreData] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -30,6 +43,7 @@ export function ShadowingTechnique() {
 
   const ContinueToShadowing = () => {
     setScoreData(null);
+    setRecordedAudio(null);
     handlePlay();
   };
 
@@ -79,6 +93,73 @@ export function ShadowingTechnique() {
     }
   };
 
+  // Hata durumu render fonksiyonu
+  const renderErrorState = () => (
+    <div className="flex flex-col items-center justify-center h-full py-12 space-y-4">
+      <AlertTriangle className="w-12 h-12 text-red-500" />
+      <div className="text-center">
+        <p className="text-red-400 font-medium mb-2">
+          Transcript Loading Failed
+        </p>
+        <p className="text-gray-400 text-sm mb-4">{transcriptError}</p>
+        {retryCount > 0 && (
+          <p className="text-gray-500 text-xs mb-4">
+            Retry attempt: {retryCount}/3
+          </p>
+        )}
+        <Button
+          onClick={retryLoadTranscript}
+          variant="outline"
+          size="sm"
+          className="bg-red-900 hover:bg-red-800 border-red-700 text-red-300"
+          disabled={isTranscriptLoading}
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          {isTranscriptLoading ? "Retrying..." : "Retry"}
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Yükleme durumu render fonksiyonu
+  const renderLoadingState = () => (
+    <div className="flex flex-col items-center justify-center h-full py-12">
+      <div className="w-12 h-12 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
+      <div className="text-center">
+        <p className="text-gray-400 mb-2">
+          {isTranscriptLoading ? "Loading transcript..." : "Initializing..."}
+        </p>
+        <div className="flex space-x-4 text-sm">
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                playerReady ? "bg-green-500" : "bg-gray-500"
+              }`}
+            ></div>
+            <span className="text-gray-500">
+              Player: {playerReady ? "Ready" : "Loading"}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                transcriptReady ? "bg-green-500" : "bg-gray-500"
+              }`}
+            ></div>
+            <span className="text-gray-500">
+              Transcript: {transcriptReady ? "Ready" : "Loading"}
+            </span>
+          </div>
+        </div>
+        {retryCount > 0 && (
+          <p className="text-gray-500 text-xs mt-2">
+            Retry attempt: {retryCount}/3
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full w-full flex flex-col rounded-xl overflow-hidden shadow-lg bg-zinc-900 text-white">
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -91,7 +172,7 @@ export function ShadowingTechnique() {
           {/* YouTube Player */}
           <div
             id="yt-player"
-            className="w-full  bg-zinc-800 pointer-events-none"
+            className="w-full bg-zinc-800 pointer-events-none"
           ></div>
 
           {/* Current Line Display - Animated with gradient border */}
@@ -111,7 +192,14 @@ export function ShadowingTechnique() {
             isPlaying ? "hidden" : "block"
           } md:block border-l border-zinc-700 transition-all duration-300 ease-in-out overflow-y-auto`}
         >
-          {isReady ? (
+          {/* Hata durumu */}
+          {transcriptError && !isTranscriptLoading ? (
+            renderErrorState()
+          ) : /* Yükleme durumu */
+          !isReady || isTranscriptLoading ? (
+            renderLoadingState()
+          ) : (
+            /* Normal durum */
             <div className="space-y-6">
               {/* Status Badge */}
               <div className="flex justify-between items-center">
@@ -186,19 +274,21 @@ export function ShadowingTechnique() {
                       Continue
                     </Button>
                     <AudioRecorder onAudioData={handleAudioData} />
-                    <button
-                      onClick={() => playAudio()}
-                      className="p-0.5 sm:p-0.5 rounded-lg bg-zinc-700 transition-colors text-white-400 hover:text-emerald-400"
-                      aria-label="Play audio"
-                      title="Play"
-                    >
-                      <div className="flex flex-row justify-center items-center gap-1 ">
-                        <Volume2 size={16} className="sm:w-4 sm:h-4" />
-                        <span className="text-[13px] mt-0.5 font-bold">
-                          Listen
-                        </span>
-                      </div>
-                    </button>
+                    {recordedAudio && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => playAudio()}
+                        className="text-indigo-400 hover:text-indigo-300"
+                      >
+                        <div className="flex flex-row justify-center items-center gap-1">
+                          <Volume2 size={16} className="sm:w-4 sm:h-4" />
+                          <span className="text-[13px] mt-0.5 font-bold">
+                            Listen
+                          </span>
+                        </div>
+                      </Button>
+                    )}
                   </div>
 
                   {isProcessing && (
@@ -211,11 +301,6 @@ export function ShadowingTechnique() {
                   )}
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full py-12">
-              <div className="w-12 h-12 border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-400">Loading transcript...</p>
             </div>
           )}
         </div>

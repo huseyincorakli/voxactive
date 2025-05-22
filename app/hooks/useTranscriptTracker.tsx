@@ -119,11 +119,16 @@ export function useYoutubeTranscript(
   const [playerReady, setPlayerReady] = useState(false);
   const [transcriptReady, setTranscriptReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [repeatMode, setRepeatMode] = useState(false); // 👈 yeni state
+  const [repeatMode, setRepeatMode] = useState(false);
   const [lastSentenceTimestamp, setLastSentenceTimestamp] = useState<{
     start: number;
     end: number;
   } | null>(null);
+
+  // Yeni state'ler - hata yönetimi için
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
+  const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const minSentenceLength = options.minSentenceLength || 1;
   const sentenceHistory = useRef<string[]>([]);
@@ -131,6 +136,10 @@ export function useYoutubeTranscript(
   const accumulatedText = useRef("");
   const lastPausedPosition = useRef<number>(-1);
   const manuallyPlayed = useRef<boolean>(false);
+
+  // Transcript yükleme işlemi için retry mekanizması
+  const maxRetries = 3;
+  const retryDelay = 2000; // 2 saniye
 
   const processTranscript = useCallback(
     (data: any[]) => {
@@ -151,55 +160,139 @@ export function useYoutubeTranscript(
     [cleanTranscriptData, decodeHtml, getWordCount]
   );
 
-  useEffect(() => {
-    getTranscriptYoutube(videoId)
-      .then((response) => {
-        setTranscript(processTranscript(response as any[]));
-        setTranscriptReady(true);
-      })
-      .catch(console.error);
-  }, [videoId, processTranscript]);
+  // Transcript yükleme fonksiyonu - retry mekanizması ile
+  const loadTranscript = useCallback(
+    async (videoId: string, attempt: number = 0) => {
+      setIsTranscriptLoading(true);
+      setTranscriptError(null);
 
+      try {
+        console.log(
+          `Loading transcript for video ${videoId}, attempt ${attempt + 1}`
+        );
+
+        const response = await Promise.race([
+          getTranscriptYoutube(videoId),
+          new Promise(
+            (_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000) // 15 saniye timeout
+          ),
+        ]);
+
+        console.log("Transcript response:", response);
+
+        if (!response || (Array.isArray(response) && response.length === 0)) {
+          throw new Error("Empty transcript received");
+        }
+
+        const processedTranscript = processTranscript(response as any[]);
+
+        if (processedTranscript.length === 0) {
+          throw new Error("No valid transcript segments found");
+        }
+
+        setTranscript(processedTranscript);
+        setTranscriptReady(true);
+        setTranscriptError(null);
+        setRetryCount(0);
+
+        console.log(
+          "Transcript loaded successfully:",
+          processedTranscript.length,
+          "segments"
+        );
+      } catch (error: any) {
+        console.error(
+          `Transcript loading failed (attempt ${attempt + 1}):`,
+          error
+        );
+
+        if (attempt < maxRetries - 1) {
+          setRetryCount(attempt + 1);
+          setTimeout(() => {
+            loadTranscript(videoId, attempt + 1);
+          }, retryDelay * (attempt + 1)); // Exponential backoff
+        } else {
+          setTranscriptError(
+            error.message === "Timeout"
+              ? "Transcript loading timed out. Please try again."
+              : "Failed to load transcript. Please refresh the page."
+          );
+          setTranscriptReady(false);
+        }
+      } finally {
+        setIsTranscriptLoading(false);
+      }
+    },
+    [processTranscript, maxRetries, retryDelay]
+  );
+
+  // Transcript yükleme effect'i
   useEffect(() => {
+    if (!videoId) return;
+
+    // State'leri sıfırla
+    setIsReady(false);
+    setTranscriptReady(false);
+    setTranscript([]);
+    setTranscriptError(null);
+    setRetryCount(0);
+
+    loadTranscript(videoId);
+  }, [videoId, loadTranscript]);
+
+  // YouTube Player initialization
+  useEffect(() => {
+    if (!videoId) return;
+
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
 
     const handleAPIReady = () => {
-      playerRef.current = new window.YT.Player("yt-player", {
-        videoId,
-        playerVars: {
-          controls: 0,
-          modestbranding: 1,
-          disablekb: 1,
-          rel: 0,
-          fs: 0,
-          enablejsapi: 1,
-          cc_load_policy: 3,
-          iv_load_policy: 3,
-        },
-        events: {
-          onReady: (event) => {
-            if (playerRef.current) {
-              playerRef.current.setOption("captions", "track", {});
-              playerRef.current.unloadModule("captions");
-            }
-            setPlayerReady(true);
+      try {
+        playerRef.current = new window.YT.Player("yt-player", {
+          videoId,
+          playerVars: {
+            controls: 0,
+            modestbranding: 1,
+            disablekb: 1,
+            rel: 0,
+            fs: 0,
+            enablejsapi: 1,
+            cc_load_policy: 3,
+            iv_load_policy: 3,
           },
-          onStateChange: (event) => {
-            const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
-            setIsPlaying(newIsPlaying);
-            if (newIsPlaying) {
+          events: {
+            onReady: (event) => {
+              console.log("YouTube player ready");
               if (playerRef.current) {
                 playerRef.current.setOption("captions", "track", {});
+                playerRef.current.unloadModule("captions");
               }
-              manuallyPlayed.current = true;
-              setTimeout(() => {
-                manuallyPlayed.current = false;
-              }, 1000);
-            }
+              setPlayerReady(true);
+            },
+            onStateChange: (event) => {
+              const newIsPlaying = event.data === window.YT.PlayerState.PLAYING;
+              setIsPlaying(newIsPlaying);
+              if (newIsPlaying) {
+                if (playerRef.current) {
+                  playerRef.current.setOption("captions", "track", {});
+                }
+                manuallyPlayed.current = true;
+                setTimeout(() => {
+                  manuallyPlayed.current = false;
+                }, 1000);
+              }
+            },
+            onError: (event) => {
+              console.error("YouTube player error:", event.data);
+              setPlayerReady(false);
+            },
           },
-        },
-      });
+        });
+      } catch (error) {
+        console.error("Failed to initialize YouTube player:", error);
+        setPlayerReady(false);
+      }
     };
 
     if (window.YT?.Player) {
@@ -208,17 +301,35 @@ export function useYoutubeTranscript(
       window.onYouTubeIframeAPIReady = handleAPIReady;
     }
 
-    document.body.appendChild(tag);
+    // Script'i sadece yoksa ekle
+    if (
+      !document.querySelector(
+        'script[src="https://www.youtube.com/iframe_api"]'
+      )
+    ) {
+      document.body.appendChild(tag);
+    }
+
     return () => {
       window.onYouTubeIframeAPIReady = null;
-      if (tag.parentNode) document.body.removeChild(tag);
+      if (tag.parentNode) {
+        document.body.removeChild(tag);
+      }
     };
   }, [videoId]);
 
+  // Ready state kontrolü
   useEffect(() => {
-    if (playerReady && transcriptReady) setIsReady(true);
-  }, [playerReady, transcriptReady]);
+    console.log("Ready state check:", { playerReady, transcriptReady });
+    if (playerReady && transcriptReady && transcript.length > 0) {
+      setIsReady(true);
+      console.log("System ready!");
+    } else {
+      setIsReady(false);
+    }
+  }, [playerReady, transcriptReady, transcript.length]);
 
+  // Ana işlem döngüsü
   useEffect(() => {
     if (!isReady || !transcript.length) return;
 
@@ -233,14 +344,13 @@ export function useYoutubeTranscript(
       const currentTime = playerRef.current.getCurrentTime();
       setCurrentTime(currentTime);
 
-      // 🛑 repeat mode kontrolü
       if (
         repeatMode &&
         lastSentenceTimestamp &&
         currentTime >= lastSentenceTimestamp.end - 0.1
       ) {
         playerRef.current.pauseVideo();
-        setRepeatMode(false); // tekrar bittiğinde repeat moddan çık
+        setRepeatMode(false);
         return;
       }
 
@@ -293,7 +403,7 @@ export function useYoutubeTranscript(
           currentTime < seg.offset + seg.duration + 0.15 &&
           Math.abs(currentTime - lastPausedPosition.current) > 1.0 &&
           nextIndex < transcript.length &&
-          !repeatMode // ❗️repeat sırasında durdurma olmasın
+          !repeatMode
         ) {
           playerRef.current.pauseVideo();
           lastPausedPosition.current = currentTime;
@@ -337,17 +447,23 @@ export function useYoutubeTranscript(
     playerRef.current?.pauseVideo?.();
   }, []);
 
-  // ✅ Repeat: sadece belirtilen cümle aralığında çalış ve sonunda dur
   const handleRepeat = useCallback(() => {
     if (lastSentenceTimestamp && playerRef.current?.seekTo) {
       playerRef.current.seekTo(lastSentenceTimestamp.start, true);
       lastProcessedIndex.current = -1;
-      setRepeatMode(true); // 🔥 tekrar modunu başlat
+      setRepeatMode(true);
       setTimeout(() => {
         playerRef.current?.playVideo?.();
       }, 100);
     }
   }, [lastSentenceTimestamp]);
+
+  // Manuel retry fonksiyonu
+  const retryLoadTranscript = useCallback(() => {
+    if (!videoId) return;
+    setRetryCount(0);
+    loadTranscript(videoId);
+  }, [videoId, loadTranscript]);
 
   return {
     playerRef,
@@ -361,5 +477,13 @@ export function useYoutubeTranscript(
     handlePause,
     handleRepeat,
     lastSentenceTimestamp,
+
+    // Yeni dönen değerler
+    transcriptError,
+    isTranscriptLoading,
+    retryCount,
+    retryLoadTranscript,
+    transcriptReady,
+    playerReady,
   };
 }
