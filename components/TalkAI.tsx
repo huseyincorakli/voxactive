@@ -3,7 +3,14 @@ import AIResponse from "@/components/AIResponse";
 import { UserResponse } from "@/components/UserResponse";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Volume2, MessageSquare, Type, Send, Loader2, AlertCircle } from "lucide-react";
+import {
+  Volume2,
+  MessageSquare,
+  Type,
+  Send,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { talkAI } from "@/app/action";
 import ConversationStarter from "./ConversationStarter";
@@ -20,11 +27,12 @@ type ConversationParams = {
 const TalkAI = () => {
   // State declarations
   const [conversationStarted, setConversationStarted] = useState(false);
-  const [conversationParams, setConversationParams] = useState<ConversationParams>({
-    UserLevel: "B1",
-    Topic: "Foods",
-    UserLanguage: "Turkish",
-  });
+  const [conversationParams, setConversationParams] =
+    useState<ConversationParams>({
+      UserLevel: "A1",
+      Topic: "General",
+      UserLanguage: "Turkish",
+    });
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -37,28 +45,34 @@ const TalkAI = () => {
   const voiceRecorderRef = useRef<VoiceRecorderRef>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter()
+  const router = useRouter();
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey
+      )
+        return;
 
-      if (e.key.toLowerCase() === 't') {
+      if (e.key.toLowerCase() === "t") {
         e.preventDefault();
         handleReplyWithText();
-      } else if (e.key.toLowerCase() === 'v') {
+      } else if (e.key.toLowerCase() === "v") {
         e.preventDefault();
         toggleVoiceRecording();
-      } else if (e.key === 'Escape' && isRecording) {
+      } else if (e.key === "Escape" && isRecording) {
         e.preventDefault();
         voiceRecorderRef.current?.stopRecording(true);
         setIsRecording(false);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isRecording]);
 
   const toggleVoiceRecording = () => {
@@ -119,14 +133,14 @@ const TalkAI = () => {
   const startConversation = async () => {
     setLoading(true);
     try {
-      const result = await talkAI({
+      const result = (await talkAI({
         UserLevel: conversationParams.UserLevel,
         Topic: conversationParams.Topic,
         UserInput: "Start",
         History: "",
         UserLanguage: conversationParams.UserLanguage,
         threadId: "session_" + Date.now(),
-      }) as any;
+      })) as any;
 
       if (result.data && result.success) {
         setMessages([
@@ -138,11 +152,10 @@ const TalkAI = () => {
           },
         ]);
         setConversationStarted(true);
-      }
-      else{
-        toast.error(result?.error?.message)
-        if(result.redirect){
-          router.push(`/${result.redirect}`)
+      } else {
+        toast.error(result?.error?.message);
+        if (result.redirect) {
+          router.push(`/${result.redirect}`);
         }
       }
     } catch (error) {
@@ -180,14 +193,14 @@ const TalkAI = () => {
     setShowInput(false);
 
     try {
-      const result = await talkAI({
+      const result = (await talkAI({
         UserLevel: conversationParams.UserLevel,
         Topic: conversationParams.Topic,
         UserInput: messageText,
         History: prepareHistory(updatedMessages),
         UserLanguage: conversationParams.UserLanguage,
         threadId: "user_session_" + Date.now(),
-      }) as any;
+      })) as any;
 
       if (result.data && result.success) {
         setMessages((prev) => [
@@ -199,13 +212,12 @@ const TalkAI = () => {
             audioBase64: result.data.SpeechOutput?.audioBase64 || null,
           },
         ]);
-      }
-      else{
+      } else {
         console.log(result);
-        if(!result.success){
-          toast.error(result?.error?.message)
-          if(result.redirect){
-            router.push(`/${result.redirect}`)
+        if (!result.success) {
+          toast.error(result?.error?.message);
+          if (result.redirect) {
+            router.push(`/${result.redirect}`);
           }
         }
       }
@@ -229,15 +241,19 @@ const TalkAI = () => {
       const cleanMessage = message.text
         .replace(/<error-correction>|<\/error-correction>/g, "")
         .trim();
-    
-      const [correctionLine, explanationLine] = cleanMessage.split("Explanation:");
+
+      const [correctionLine, explanationLine] =
+        cleanMessage.split("Explanation:");
       const correction = correctionLine.replace("Correction:", "").trim();
       const explanation = explanationLine?.trim();
-    
+
       return (
         <div className="bg-amber-900/50 border border-amber-700 text-amber-100 p-4 rounded-lg mb-2">
           <div className="flex items-start gap-2">
-            <AlertCircle className="flex-shrink-0 mt-0.5 text-amber-300" size={16} />
+            <AlertCircle
+              className="flex-shrink-0 mt-0.5 text-amber-300"
+              size={16}
+            />
             <div className="space-y-2">
               <div>
                 <h6 className="font-semibold text-amber-200">Correction</h6>
@@ -254,9 +270,14 @@ const TalkAI = () => {
         </div>
       );
     }
-    
 
-    return <AIResponse userLang={conversationParams.UserLanguage} response={message.text} audioBase64={message.audioBase64} />;
+    return (
+      <AIResponse
+        userLang={conversationParams.UserLanguage}
+        response={message.text}
+        audioBase64={message.audioBase64}
+      />
+    );
   };
 
   useEffect(() => {
@@ -279,16 +300,25 @@ const TalkAI = () => {
   return (
     <div className="flex flex-col items-center w-full h-full p-2 sm:p-4">
       <div className="text-xs text-zinc-500 mb-2">
-        Press <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded">T</kbd> for text,
-        <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">V</kbd> to {isRecording ? 'send' : 'start voice'}
-        {isRecording && <>, <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">ESC</kbd> to cancel</>}
+        Press <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded">T</kbd> for
+        text,
+        <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">V</kbd> to{" "}
+        {isRecording ? "send" : "start voice"}
+        {isRecording && (
+          <>
+            , <kbd className="px-1.5 py-0.5 bg-zinc-700 rounded ml-1">ESC</kbd>{" "}
+            to cancel
+          </>
+        )}
       </div>
 
       <Card className="bg-zinc-900/80 border-zinc-800 text-white w-full h-[80vh] sm:h-[70vh] flex flex-col backdrop-blur-sm">
         <CardHeader className="border-b border-zinc-800 p-3 sm:p-4 sticky top-0 bg-zinc-900/80 z-10">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-400 animate-pulse" />
-            <h2 className="text-xs sm:text-xl font-semibold">Talk With Voxy. Voxy is good friend</h2>
+            <h2 className="text-xs sm:text-xl font-semibold">
+              Talk With Voxy. Voxy is good friend
+            </h2>
           </div>
         </CardHeader>
 
@@ -307,7 +337,9 @@ const TalkAI = () => {
                           showAudio={false}
                         />
                         <Button
-                           variant="outline" size="sm" className="h-8 bg-yellow-500 hover:bg-yellow-600 border-none text-white w-36"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 bg-yellow-500 hover:bg-yellow-600 border-none text-white w-36"
                           onClick={handleReplyWithText}
                         >
                           <Type className="h-3 w-3  mr-1" />
@@ -347,7 +379,11 @@ const TalkAI = () => {
                   <button
                     onClick={() => handleSend()}
                     disabled={!input.trim() || loading}
-                    className={`p-1 rounded-full ${!input.trim() || loading ? 'text-zinc-500' : 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/30'}`}
+                    className={`p-1 rounded-full ${
+                      !input.trim() || loading
+                        ? "text-zinc-500"
+                        : "text-blue-400 hover:text-blue-300 hover:bg-blue-900/30"
+                    }`}
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />

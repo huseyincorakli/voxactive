@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function PanelMock({
   title,
   innerText,
@@ -34,7 +32,7 @@ export default function PanelMock({
       {/* Image with smoother transition */}
       <div className="relative z-10 w-full transition-all duration-500 ease-in-out">
         <div className="bg-gradient-to-b from-zinc-900/60 to-transparent rounded-xl overflow-hidden shadow-xl  ring-white/10 group-hover:ring-blue-500/20 transition-all duration-700 ease-in-out">
-          <Image
+          <img
             src={imagePath}
             alt={imageAlt}
             className="w-full h-auto object-contain transition-transform duration-700 ease-in-out group-hover:scale-[1.012]"

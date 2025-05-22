@@ -229,7 +229,6 @@ Your ONLY job is to decide if this sentence has **serious grammatical errors** t
 RESPOND WITH EXACTLY ONE WORD:
 - "NO" if the meaning is clear, even if there are minor errors
 - "YES" if the sentence has serious grammatical errors that make the meaning unclear or difficult to understand, such as subject-verb agreement issues or incorrect verb forms
--“NO” if there are errors in punctuation, and usage errors such as uppercase and lowercase letters
 - If the input is empty or whitespace only, respond with "NO"
 
 STRICT RULES — YOU MUST FOLLOW THESE:
@@ -239,6 +238,8 @@ STRICT RULES — YOU MUST FOLLOW THESE:
 5. Reply with ONLY one word: YES or NO — nothing else
 7. If there is a **serious grammar issue** that makes the meaning unclear or difficult to understand, respond with "YES".
 
+
+(MOST IMPORTANT RULE) If the user makes a punctuation error or a lowercase capitalization error, i.e. a typo, ignore it and treat it as “NO”
 Text to check: {UserInput}`;
 
 export const TalkAIGrammarCorrectionPrompt_Constant: string = `
