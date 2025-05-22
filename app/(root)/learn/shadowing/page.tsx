@@ -1,14 +1,29 @@
 import { ClientCarousel } from "@/components/ClientCarousel";
 import { Video, Videos } from "@/lib/constants";
-import {
-  Play,
-  Headphones,
-  Repeat2,
-  Activity,
-  Check,
-  Sparkles,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Headphones, Repeat2, Activity, Check, Sparkles } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Learn English by Applying the Shadowing Technique - VoxActive",
+  description:
+    "Improve your language skills by repeating the content you listen to effectively",
+  openGraph: {
+    title: "Learn English by Applying the Shadowing Technique - VoxActive",
+    description:
+      "Improve your language skills by repeating the content you listen to effectively",
+    url: "https://voxactive.huscor.tech/learn/shadowing",
+    siteName: "VoxActive",
+    images: [
+      {
+        url: "https://voxactive.huscor.tech/ai-avatar.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+};
 
 // Level ordering
 const levelOrder = {
